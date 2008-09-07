@@ -1,0 +1,10 @@
+require 'rubygems'
+require 'continuous-builder'
+
+class DomTreeBuilder < ContinuousBuilder
+
+end
+
+builder = DomTreeBuilder.new
+builder.build_all
+builder.build_continuously
