@@ -3555,9 +3555,9 @@ jQuery.viewporb = jQuery("<div id='viewport'></div>");
 
 jQuery.viewport = jQuery("<div id='viewport'>  <ol id='tree'></ol>  <iframe></iframe></div>");
 
-jQuery.dom_tree_stylesheet = jQuery("<style>  body {    overflow: hidden; }    #viewport ol {    list-style: none; }  #viewport #tree {    z-index: 100000000000000;    margin-top: 0px;    padding-left: 0px;    height: 100%;    width: 20%;    position: absolute;    overflow: auto;    top: 0px;    left: 0px;    background-color: white; }    #viewport #tree .inspected {      background-color: #fcc; }      #viewport #tree .inspected li {        background-color: white; }  #viewport iframe {    border: 1px outset;    position: absolute;    left: 20%;    width: 80%;    height: 100%; }</style>");
+jQuery.dom_tree_stylesheet = jQuery("<style>  body {    overflow: hidden;    font-size: 100%; }    li.inspected> button.toggle {    background-image: url(http://localhost:4567/icons/close.png); }  li.inspected> button.block {    background-color: transparent;    background-image: url(http://localhost:4567/icons/block.png); }  li.inspected> button.destroy {    background-color: transparent;    background-image: url(http://localhost:4567/icons/small_cross.png); }  li.inspected> button.drag {    cursor: move;    background-color: transparent;    background-image: url(http://localhost:4567/icons/drag_handle.gif); }  li button.block, li button.destroy, li button.drag, li button.toggle {    border: none;    display: inline;    position: relative;    top: 4px;    float: left;    width: 12px;    height: 12px;    background: none; }  li button.toggle {    width: 16px;    height: 16px;    top: 2px; }  li button.destroy {    margin-right: 10px;    opacity: .5; }    li button.destroy:hover {      opacity: 1; }  li button.block {    margin-right: 10px; }    li button.block:hover {      background-image: url(http://localhost:4567/icons/active_block.png); }    #viewport {    font-size: .7em;    font-family: sans-serif; }    #viewport ol, #viewport ul {      list-style: none; }    #viewport ol {      white-space: nowrap;      background-color: white;      padding: 0; }      #viewport ol .inspected {        background-color: #fcc; }        #viewport ol .inspected li {          background-color: white; }      #viewport ol li {        clear: both;        padding-left: 10px;        margin-left: 0px; }      #viewport ol .element {        display: inline;        position: relative;        line-height: 20px; }        #viewport ol .element:before {          content: \"<\";          margin-right: -.3em; }        #viewport ol .element:after {          content: \">\";          margin-left: -.3em; }        #viewport ol .element label, #viewport ol .element .id {          display: inline; }        #viewport ol .element label {          color: blue; }        #viewport ol .element .id {          color: red;          margin-left: -.3em; }          #viewport ol .element .id:before {            content: \"#\"; }        #viewport ol .element .classes {          display: inline;          padding: 0;          margin: 0; }          #viewport ol .element .classes li {            padding: 0;            margin: 0;            background: transparent;            display: inline;            color: green; }            #viewport ol .element .classes li:first-child {              margin-left: -.3em; }            #viewport ol .element .classes li:before {              content: \".\";              color: black;              font-weight: bold; }    #viewport #tree {      z-index: 100000000000000;      margin-top: 0px;      margin-left: 0px;      padding-left: 0px;      height: 100%;      width: 20%;      position: absolute;      overflow: auto;      top: 0px;      left: 0px; }    #viewport iframe {      border: 1px outset;      position: absolute;      left: 20%;      width: 80%;      height: 100%;      top: 0px;      right: 0px; }</style>");
 
-jQuery.tree_node = jQuery("<li>  <button class='toggle'></button>  <label>Label</label>  <ol></ol></li>");
+jQuery.tree_node = jQuery("<li class='tree_node'>  <button class='destroy'></button>  <button class='block'></button>  <button class='drag'></button>  <button class='toggle'></button>  <div class='element'>    <label>Label</label>    <div class='id'></div>    <ul class='classes'></ul>  </div>  <ol></ol></li>");
 
 jQuery.canvas_stylesheet = jQuery("<style>  .inspected {    outline: 2px red dashed; }</style>");
 
@@ -3577,9 +3577,12 @@ jQuery.fn.info = function() {
 }
   return str;
 };
+jQuery.fn.linked_element = function() {
+  var $this = this;
+};
 jQuery.fn.to_tree_nodes = function(parent) {
   var $this = this;
-  $this.children().each(function() {var $this = jQuery(this);var node = $.tree_node.clone();if(!$this.attr('id')) $this.attr('id', id());node.data('element', $this.attr('id'));node.attr('id', id());jQuery(this).data('node', node.attr('id'));node.find('label:first').html($this.info()); parent.append(node);jQuery(this).to_tree_nodes(node.find('ol:first'));
+  $this.children().each(function() {var $this = jQuery(this);var node = $.tree_node.clone();node.find('label:first').html($this.attr('tagName').toLowerCase());var idLabel = node.find('.id');idLabel.html($this.attr('id'));if(idLabel.html() == "") idLabel.hide();if(!$this.attr('id')) $this.attr('id', id());node.data('element', $this.attr('id'));node.attr('id', id());jQuery(this).data('node', node.attr('id'));jQuery(jQuery(this).attr('class').split(' ')).each(function(which, class) {if(class !== "")node.find('.classes').append(jQuery('<li>'+class+'</li>'));});parent.append(node);jQuery(this).to_tree_nodes(node.find('ol:first'));
   });
 };
 (function($this) {
@@ -3603,18 +3606,30 @@ jQuery.fn.to_tree_nodes = function(parent) {
 (function($this) {
   $this.bind("mouseover", function(e) {
     var $this = jQuery(this);
-    var el = jQuery(e.target);
-    if(!(el.is("li"))) {
-      el = el.parents('li:first');
+    var node = jQuery(e.target);
+    if(!(node.is(".tree_node"))) {
+      node = node.parents('.tree_node:first');
 }
     (function($this) {
       $this.removeClass('inspected');
 })(jQuery(".inspected"));
-    el.addClass('inspected');
+    node.addClass('inspected');
     (function($this) {
       $this.contents().find('.inspected').removeClass('inspected');
-      var element = $this.contents().find('#' + el.data('element'));
+      var element = $this.contents().find('#' + node.data('element'));
       element.addClass('inspected');
 })(jQuery("#viewport iframe"));
+});
+  $this.bind("click", function(e) {
+    var $this = jQuery(this);
+    var el = jQuery(e.target);
+    if(el.is(".destroy")) {
+      var node = el.parents('.tree_node:first');
+      (function($this) {
+        var element = $this.contents().find('#' + node.data('element'));
+        element.remove();
+        node.remove();
+})(jQuery("#viewport iframe"));
+}
 });
 })(jQuery("#tree"));

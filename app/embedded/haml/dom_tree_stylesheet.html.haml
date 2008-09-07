@@ -1,15 +1,119 @@
 %style
   :sass
+    =famfamfam
+      :text-indent -10000px
+      :width 20px
+      :height 20px
+      :border-color transparent
+      :position relative
+      :top -4px
+      :background
+        :color transparent
+        :repeat no-repeat
+        :position center
+      &:hover
+        :border-color black
     body
       :overflow hidden
-      
+      :font-size 100%
+    li  
+      &.inspected
+        &> button.toggle
+          :background-image url(#{DomTree.uri_root}/icons/close.png)
+        &> button.block
+          :background
+            :color transparent
+            :image url(#{DomTree.uri_root}/icons/block.png) 
+        &> button.destroy
+          :background
+            :color transparent
+            :image url(#{DomTree.uri_root}/icons/small_cross.png)
+        &> button.drag
+          :cursor move
+          :background
+            :color transparent
+            :image url(#{DomTree.uri_root}/icons/drag_handle.gif)
+      button.block, button.destroy, button.drag, button.toggle
+        :border none
+        :display inline
+        :position relative
+        :top 4px
+        :float left
+        :width 12px
+        :height 12px
+        :background none
+      button.toggle
+        :width 16px
+        :height 16px
+        :top 2px
+      button.destroy
+        :margin-right 10px
+        :opacity .5
+        &:hover
+          :opacity 1
+      button.block
+        :margin-right 10px
+        &:hover
+          :background-image url(#{DomTree.uri_root}/icons/active_block.png) 
     #viewport
-      ol
+      :font
+        :size .7em
+        :family sans-serif
+      ol, ul
         :list-style none
+      ol
+        :white-space nowrap
+        :background-color white
+        :padding 0
+        .inspected
+          :background-color #fcc
+          li
+            :background-color white
+        li
+          :clear both
+          :padding-left 10px
+          :margin-left 0px
+        .element
+          :display inline
+          :position relative
+          :line-height 20px
+          &:before
+            :content "<"
+            :margin-right -.3em
+          &:after
+            :content ">"
+            :margin-left -.3em
+          label, .id
+            :display inline
+          label
+            :color blue
+          .id
+            :color red
+            :margin-left -.3em
+            &:before
+              :content "#"
+          .classes
+            :display inline
+            :padding 0
+            :margin 0 
+            li
+              :padding 0
+              :margin 0
+              :background transparent
+              :display inline
+              :color green
+              &:first-child
+                :margin-left -.3em
+              &:before
+                :content "."
+                :color black
+                :font-weight bold
+
       #tree 
         :z-index 100000000000000
         :margin
           :top 0px
+          :left 0px
         :padding
           :left 0px
         :height 100%
@@ -18,15 +122,12 @@
         :overflow auto
         :top 0px
         :left 0px
-        :background-color white
-        .inspected
-          :background-color #fcc
-          li
-            :background-color white
+        
       iframe
         :border 1px outset
         :position absolute
         :left 20%
         :width 80%
         :height 100%
-       
+        :top 0px
+        :right 0px

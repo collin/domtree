@@ -14,9 +14,12 @@ jQuery.fn.info = function() {
 }
   return str;
 };
+jQuery.fn.linked_element = function() {
+  var $this = this;
+};
 jQuery.fn.to_tree_nodes = function(parent) {
   var $this = this;
-  $this.children().each(function() {var $this = jQuery(this);var node = $.tree_node.clone();if(!$this.attr('id')) $this.attr('id', id());node.data('element', $this.attr('id'));node.attr('id', id());jQuery(this).data('node', node.attr('id'));node.find('label:first').html($this.info()); parent.append(node);jQuery(this).to_tree_nodes(node.find('ol:first'));
+  $this.children().each(function() {var $this = jQuery(this);var node = $.tree_node.clone();node.find('label:first').html($this.attr('tagName').toLowerCase());var idLabel = node.find('.id');idLabel.html($this.attr('id'));if(idLabel.html() == "") idLabel.hide();if(!$this.attr('id')) $this.attr('id', id());node.data('element', $this.attr('id'));node.attr('id', id());jQuery(this).data('node', node.attr('id'));jQuery(jQuery(this).attr('class').split(' ')).each(function(which, class) {if(class !== "")node.find('.classes').append(jQuery('<li>'+class+'</li>'));});parent.append(node);jQuery(this).to_tree_nodes(node.find('ol:first'));
   });
 };
 (function($this) {
@@ -40,18 +43,30 @@ jQuery.fn.to_tree_nodes = function(parent) {
 (function($this) {
   $this.bind("mouseover", function(e) {
     var $this = jQuery(this);
-    var el = jQuery(e.target);
-    if(!(el.is("li"))) {
-      el = el.parents('li:first');
+    var node = jQuery(e.target);
+    if(!(node.is(".tree_node"))) {
+      node = node.parents('.tree_node:first');
 }
     (function($this) {
       $this.removeClass('inspected');
 })(jQuery(".inspected"));
-    el.addClass('inspected');
+    node.addClass('inspected');
     (function($this) {
       $this.contents().find('.inspected').removeClass('inspected');
-      var element = $this.contents().find('#' + el.data('element'));
+      var element = $this.contents().find('#' + node.data('element'));
       element.addClass('inspected');
 })(jQuery("#viewport iframe"));
+});
+  $this.bind("click", function(e) {
+    var $this = jQuery(this);
+    var el = jQuery(e.target);
+    if(el.is(".destroy")) {
+      var node = el.parents('.tree_node:first');
+      (function($this) {
+        var element = $this.contents().find('#' + node.data('element'));
+        element.remove();
+        node.remove();
+})(jQuery("#viewport iframe"));
+}
 });
 })(jQuery("#tree"));

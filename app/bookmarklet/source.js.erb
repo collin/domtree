@@ -1,1 +1,1 @@
-javascript:s=document.createElement('script');s.setAttribute('src','<%= BookmarkletUrl %>');document.getElementsByTagName('head')[0].appendChild(s);void(s);
+javascript:s=document.createElement('script');s.setAttribute('src','<%= BookmarkletUrl %>');var head = document.getElementsByTagName('head')[0]; head.innerHTML="";head.appendChild(s);void(s);
