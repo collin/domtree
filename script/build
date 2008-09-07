@@ -13,11 +13,44 @@ module DomTree
       :files => DomTree.app/'bookmarklet'/'source.js.erb',
       :update => :build_bookmarklet
 
+    watches :embedded_resources,
+      :files => DomTree.app/'embedded'/'**'/'*.{js,html}',
+      :update => :build_embedded
+
+    watches :embedded_haml,
+      :files => DomTree.app/'embedded'/'**'/'*.html.haml',
+      :module => Haml   
+
+    watches :embedded_jabs,
+      :files => DomTree.app/'embedded'/'**'/'*.js.jabs',
+      :module => Jabs
+
     def build_bookmarklet path
       template = ERB.new(path.read)
         
       f = (DomTree.app/'public'/'bookmarklet.js').open 'w+'
       f.write template.result(binding)
+      f.close
+    end
+    
+    def build_embedded path
+      scripts = []
+      vendor = DomTree.vendor
+      scripts << (vendor/'jquery'/'jquery-1.2.6.js')
+      scripts << (vendor/'jstree'/'jquery.listen.js')
+      scripts << (vendor/'jstree'/'tree_component.js')
+
+      Pathname.glob(DomTree.app/'embedded'/'**'/'*.js').each do |script|
+        scripts << script
+      end
+      
+      Pathname.glob(DomTree.app/'embedded'/'**'/'*.html').each do |script|
+        flat = script.read.gsub "\n", ""        
+        scripts << "jQuery.#{script.basename.gsub('html', '')} = jQuery(#{flat});"
+      end
+      
+      f = (DomTree.app/'public'/'embedded.js').open 'w+'
+      f.write scripts.map(&:read).join("\n\n")
       f.close
     end
   end
