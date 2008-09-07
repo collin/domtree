@@ -1,0 +1,14 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'continuous_builder'
+require 'haml'
+require 'sass'
+require 'jabs'
+
+class DomTreeBuilder < ContinuousBuilder
+end
+
+builder = DomTreeBuilder.new
+builder.build_all
+builder.build_continuously
