@@ -13,10 +13,6 @@ module DomTree
       :files => DomTree.app/'bookmarklet'/'source.js.erb',
       :update => :build_bookmarklet
 
-    watches :embedded_resources,
-      :files => DomTree.app/'embedded'/'**'/'*.{js,html}',
-      :update => :build_embedded
-
     watches :embedded_haml,
       :files => DomTree.app/'embedded'/'**'/'*.html.haml',
       :module => Haml   
@@ -24,6 +20,10 @@ module DomTree
     watches :embedded_jabs,
       :files => DomTree.app/'embedded'/'**'/'*.js.jabs',
       :module => Jabs
+
+    watches :embedded_resources,
+      :files => DomTree.app/'embedded'/'**'/'*{.js,.html}',
+      :update => :build_embedded
 
     def build_bookmarklet path
       template = ERB.new(path.read)
@@ -37,16 +37,23 @@ module DomTree
       scripts = []
       vendor = DomTree.vendor
       scripts << (vendor/'jquery'/'jquery-1.2.6.js')
-      scripts << (vendor/'jstree'/'jquery.listen.js')
-      scripts << (vendor/'jstree'/'tree_component.js')
-
-      Pathname.glob(DomTree.app/'embedded'/'**'/'*.js').each do |script|
-        scripts << script
-      end
+      #scripts << (vendor/'jstree'/'jquery.listen.js')
+      #scripts << (vendor/'jstree'/'tree_component.js')
       
       Pathname.glob(DomTree.app/'embedded'/'**'/'*.html').each do |script|
-        flat = script.read.gsub "\n", ""        
-        scripts << "jQuery.#{script.basename.gsub('html', '')} = jQuery(#{flat});"
+        flat = script.read
+        flat.gsub! "\r\n", ""
+        flat.gsub! "\n", ""
+        flat.gsub! /\/\*.*\*\//, "" 
+        flat.gsub! /\"/ , "\\\""
+        name = script.basename.to_s.gsub('.html', '')
+        jquery = "jQuery.#{name} = jQuery(\"#{flat}\");"       
+        io = StringIO.new jquery
+        scripts << io
+      end 
+      
+      Pathname.glob(DomTree.app/'embedded'/'**'/'*.js').each do |script|
+        scripts << script
       end
       
       f = (DomTree.app/'public'/'embedded.js').open 'w+'

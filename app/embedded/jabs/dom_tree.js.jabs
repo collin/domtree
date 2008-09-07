@@ -1,0 +1,43 @@
+var viewport = jQuery.viewport.clone()
+
+var _id = 0
+fun id
+  return _id++
+
+def info
+  var str = @tagName.toLowerCase();
+  if @id
+    str += "#" + @id
+  unless @class == ""
+    str += "." + @class.split(' ').join('.');
+  return str;
+  
+
+def to_tree_nodes parent
+  .children().each(function() {
+    var $this = jQuery(this);
+    var node = $.tree_node.clone();
+    
+    if(!$this.attr('id')) $this.attr('id', id());
+    node.data('element', $this.attr('id'));
+    
+    node.attr('id', id());
+    jQuery(this).data('node', node.attr('id'));
+    
+    node.find('label:first').html($this.info()); 
+    parent.append(node);
+    jQuery(this).to_tree_nodes(node.find('ol:first'));
+  })
+
+$head
+  .append(jQuery.dom_tree_stylesheet)
+
+$body
+  .html("")
+  .append(viewport)
+  
+$#viewport iframe
+  @src = window.location.href + "?"
+  :load
+    .contents().find('body').to_tree_nodes(jQuery('#tree'))
+
