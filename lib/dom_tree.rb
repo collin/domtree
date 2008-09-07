@@ -5,7 +5,6 @@ Pathname.send :alias_method, '/', '+'
 DIR = Pathname.new("#{Pathname.new(__FILE__).dirname}/..")
 
 module DomTree
-  BookmarkletUrl = "http://localhost:4567/embedded.js"
   class << self
     def root
       DIR
@@ -18,6 +17,12 @@ module DomTree
     def app
       root/'app'
     end
+    
+    def uri_root
+      "http://localhost:4567"
+    end
   end
+  
+  BookmarkletUrl = "#{uri_root}embedded.js"
 end
 
