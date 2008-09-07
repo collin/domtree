@@ -1,5 +1,13 @@
+require 'rubygems'
 require 'pathname'
+require 'colored'
 
 task :cleanup do
-  Pathname.send :rm_r, Pathname.glob('**/*~'), :force => true
+  list = Pathname.glob("**/*~") + Pathname.glob("**/*.*~")
+  if list.length > 0
+    puts "cleared up: ".bold << list.length.to_s.red.bold << " files".bold
+    Pathname.send :rm_r, list, :force => true
+  else
+    puts "no dirty~ files".bold
+  end
 end
