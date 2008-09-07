@@ -30,6 +30,28 @@ jQuery.fn.to_tree_nodes = function(parent) {
   $this.attr('src', window.location.href + "?");
   $this.bind("load", function(e) {
     var $this = jQuery(this);
-    $this.contents().find('body').to_tree_nodes(jQuery('#tree'));
+    var body = $this.contents().find('body');
+    body.to_tree_nodes(jQuery('#tree'));
+    $this.contents().find('head').append($.canvas_stylesheet);
+    body.bind('mouseover', function(e) {var el = jQuery(e.target);body.find('.inspected').removeClass('inspected');el.addClass('inspected');var node = el.data('node');jQuery('.inspected').removeClass('inspected');jQuery('#'+node).addClass('inspected');
+    });
 });
 })(jQuery("#viewport iframe"));
+(function($this) {
+  $this.bind("mouseover", function(e) {
+    var $this = jQuery(this);
+    var el = jQuery(e.target);
+    if(!(el.is("li"))) {
+      el = el.parents('li:first');
+}
+    (function($this) {
+      $this.removeClass('inspected');
+})(jQuery(".inspected"));
+    el.addClass('inspected');
+    (function($this) {
+      $this.contents().find('.inspected').removeClass('inspected');
+      var element = $this.contents().find('#' + el.data('element'));
+      element.addClass('inspected');
+})(jQuery("#viewport iframe"));
+});
+})(jQuery("#tree"));

@@ -3555,9 +3555,11 @@ jQuery.viewporb = jQuery("<div id='viewport'></div>");
 
 jQuery.viewport = jQuery("<div id='viewport'>  <ol id='tree'></ol>  <iframe></iframe></div>");
 
-jQuery.dom_tree_stylesheet = jQuery("<style>  body {    overflow: hidden; }    #viewport ol {    list-style: none; }  #viewport #tree {    z-index: 100000000000000;    margin-top: 0px;    padding-left: 0px;    height: 100%;    width: 20%;    position: absolute;    overflow: auto;    top: 0px;    left: 0px; }  #viewport iframe {    border: 1px outset;    position: absolute;    left: 20%;    width: 80%;    height: 100%; }</style>");
+jQuery.dom_tree_stylesheet = jQuery("<style>  body {    overflow: hidden; }    #viewport ol {    list-style: none; }  #viewport #tree {    z-index: 100000000000000;    margin-top: 0px;    padding-left: 0px;    height: 100%;    width: 20%;    position: absolute;    overflow: auto;    top: 0px;    left: 0px;    background-color: white; }    #viewport #tree .inspected {      background-color: #fcc; }      #viewport #tree .inspected li {        background-color: white; }  #viewport iframe {    border: 1px outset;    position: absolute;    left: 20%;    width: 80%;    height: 100%; }</style>");
 
 jQuery.tree_node = jQuery("<li>  <button class='toggle'></button>  <label>Label</label>  <ol></ol></li>");
+
+jQuery.canvas_stylesheet = jQuery("<style>  .inspected {    outline: 2px red dashed; }</style>");
 
 var viewport = jQuery.viewport.clone();
 var _id = 0
@@ -3591,6 +3593,28 @@ jQuery.fn.to_tree_nodes = function(parent) {
   $this.attr('src', window.location.href + "?");
   $this.bind("load", function(e) {
     var $this = jQuery(this);
-    $this.contents().find('body').to_tree_nodes(jQuery('#tree'));
+    var body = $this.contents().find('body');
+    body.to_tree_nodes(jQuery('#tree'));
+    $this.contents().find('head').append($.canvas_stylesheet);
+    body.bind('mouseover', function(e) {var el = jQuery(e.target);body.find('.inspected').removeClass('inspected');el.addClass('inspected');var node = el.data('node');jQuery('.inspected').removeClass('inspected');jQuery('#'+node).addClass('inspected');
+    });
 });
 })(jQuery("#viewport iframe"));
+(function($this) {
+  $this.bind("mouseover", function(e) {
+    var $this = jQuery(this);
+    var el = jQuery(e.target);
+    if(!(el.is("li"))) {
+      el = el.parents('li:first');
+}
+    (function($this) {
+      $this.removeClass('inspected');
+})(jQuery(".inspected"));
+    el.addClass('inspected');
+    (function($this) {
+      $this.contents().find('.inspected').removeClass('inspected');
+      var element = $this.contents().find('#' + el.data('element'));
+      element.addClass('inspected');
+})(jQuery("#viewport iframe"));
+});
+})(jQuery("#tree"));
