@@ -1,14 +1,28 @@
 #!/usr/bin/env ruby
 
-require 'rubygems'
+require './lib/dom_tree'
 require 'continuous_builder'
 require 'haml'
 require 'sass'
 require 'jabs'
+require 'erb'
 
-class DomTreeBuilder < ContinuousBuilder
+module DomTree
+  class Builder < ContinuousBuilder
+    watches :bookmarklet,
+      :files => DomTree.app/'bookmarklet'/'source.js.erb',
+      :update => :build_bookmarklet
+
+    def build_bookmarklet path
+      template = ERB.new(path.read)
+        
+      f = (DomTree.app/'public'/'bookmarklet.js').open 'w+'
+      f.write template.result(binding)
+      f.close
+    end
+  end
 end
 
-builder = DomTreeBuilder.new
+builder = DomTree::Builder.new
 builder.build_all
 builder.build_continuously
