@@ -64,9 +64,22 @@ jQuery.fn.to_tree_nodes = function(parent) {
       var node = el.parents('.tree_node:first');
       (function($this) {
         var element = $this.contents().find('#' + node.data('element'));
-        element.remove();
         node.remove();
+        element.remove();
 })(jQuery("#viewport iframe"));
 }
+    (function($this) {
+      if(el.is(".block")) {
+        var node = el.parents('.tree_node:first');
+        el.toggleClass('active');
+        var element = $this.contents().find('#' + node.data('element'))         
+        if(el.is(".active")) {
+          element.hide();
+}
+        if(!(el.is(".active"))) {
+          element.show();
+}
+}
+})(jQuery("#viewport iframe"));
 });
 })(jQuery("#tree"));

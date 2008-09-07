@@ -82,6 +82,15 @@ $#tree
       var node = el.parents('.tree_node:first')
       $#viewport iframe
         var element = $this.contents().find('#' + node.data('element'))
-        element.remove()
         node.remove()
-
+        element.remove()
+        
+    $#viewport iframe
+      if el.is('.block')
+        var node = el.parents('.tree_node:first')
+        el.toggleClass('active')
+        var element = $this.contents().find('#' + node.data('element'))         
+        if el.is('.active')
+          element.hide()
+        unless el.is('.active')
+          element.show()
