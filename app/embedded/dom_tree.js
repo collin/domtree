@@ -3,20 +3,6 @@ var _id = 0
 function id() {
   return _id++
 }
-jQuery.fn.info = function() {
-  var $this = this;
-  var str = $this.attr('tagName').toLowerCase();
-  if($this.attr("id")) {
-    str += "#" + $this.attr('id');
-}
-  if(!($this.attr("class") == "")) {
-    str += "." + $this.attr('class').split(' ').join('.');
-}
-  return str;
-};
-jQuery.fn.linked_element = function() {
-  var $this = this;
-};
 jQuery.fn.to_tree_nodes = function(parent) {
   var $this = this;
   $this.children().each(function() {var $this = jQuery(this);var node = $.tree_node.clone();node.find('label:first').html($this.attr('tagName').toLowerCase());var idLabel = node.find('.id');idLabel.html($this.attr('id'));if(idLabel.html() == "") idLabel.hide();if(!$this.attr('id')) $this.attr('id', id());node.data('element', $this.attr('id'));node.attr('id', id());jQuery(this).data('node', node.attr('id'));jQuery(jQuery(this).attr('class').split(' ')).each(function(which, class) {if(class !== "")node.find('.classes').append(jQuery('<li>'+class+'</li>'));});var attrs = node.find('dl');jQuery(this.attributes).each(function() {if(!this.name.match(/id|class/))attrs.append("<dt>"+this.name+"</dt><dd>"+this.value+"</dd>");});parent.parents('.tree_node:first').removeClass('empty');parent.append(node);jQuery(this).to_tree_nodes(node.find('ol:first'));
@@ -44,6 +30,28 @@ jQuery.fn.to_tree_nodes = function(parent) {
 });
 })(jQuery("#viewport iframe"));
 (function($this) {
+  $this.bind("dragstart", function(e) {
+    var $this = jQuery(this);
+    var el = jQuery(e.target);
+    if(!(el.is("button.drag"))) {
+      return false
+}
+    var node = el.parents('.tree_node:first');
+    node.find('ol:first').hide();
+    node.find('.toggle:first').addClass('closed');
+    node.addClass('dragging');
+    return node
+});
+  $this.bind("drag", function(e) {
+    var $this = jQuery(this);
+    _e = e.originalEvent
+    jQuery( e.dragProxy ).css({top:e.pageY, left:e.pageX
+    }).addClass('inspected'); 
+});
+  $this.bind("dragend", function(e) {
+    var $this = jQuery(this);
+    jQuery( e.dragProxy ).css('position', '').removeClass('dragging');
+});
   $this.bind("mouseover", function(e) {
     var $this = jQuery(this);
     var node = jQuery(e.target);

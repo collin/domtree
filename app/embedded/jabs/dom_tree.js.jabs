@@ -4,16 +4,6 @@ var _id = 0
 fun id
   return _id++
 
-def info
-  var str = @tagName.toLowerCase();
-  if @id
-    str += "#" + @id
-  unless @class == ""
-    str += "." + @class.split(' ').join('.');
-  return str;
-  
-def linked_element
-
 def to_tree_nodes parent
   .children().each(function() {
     var $this = jQuery(this);
@@ -72,6 +62,25 @@ $#viewport iframe
     })
 
 $#tree
+  :dragstart
+    var el = jQuery(e.target)
+    unless el.is('button.drag')
+      return false
+    var node = el.parents('.tree_node:first')
+    node.find('ol:first').hide()
+    node.find('.toggle:first').addClass('closed')
+    node.addClass('dragging')
+    return node
+  :drag
+    _e = e.originalEvent
+    jQuery( e.dragProxy ).css({
+      top:e.pageY, 
+      left:e.pageX
+    }).addClass('inspected'); 
+
+  :dragend
+    jQuery( e.dragProxy ).css('position', '').removeClass('dragging')
+
   :mouseover
     var node = jQuery(e.target)
     

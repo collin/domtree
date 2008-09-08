@@ -16,7 +16,9 @@
     body
       :overflow hidden
       :font-size 100%
-    li  
+    li
+      &.dragging
+        :position absolute
       &.inspected
         &> button.toggle
           :background-image url(#{DomTree.uri_root}/icons/close.png)
