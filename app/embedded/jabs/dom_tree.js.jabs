@@ -34,8 +34,15 @@ def to_tree_nodes parent
     if(class !== "")
     node.find('.classes').append(jQuery('<li>'+class+'</li>'));
     });
+    
+    var attrs = node.find('dl');
+    jQuery(this.attributes).each(function() {
+    if(!this.name.match(/id|class/))
+    attrs.append("<dt>"+this.name+"</dt><dd>"+this.value+"</dd>");
+    });
      
     
+    parent.parents('.tree_node:first').removeClass('empty');
     parent.append(node);
     jQuery(this).to_tree_nodes(node.find('ol:first'));
   })
@@ -50,6 +57,8 @@ $body
 $#viewport iframe
   @src = window.location.href + "?"
   :load
+    $#tree
+      .html('')
     var body = $this.contents().find('body')
     body.to_tree_nodes(jQuery('#tree'))
     .contents().find('head').append($.canvas_stylesheet)
@@ -94,3 +103,25 @@ $#tree
           element.hide()
         unless el.is('.active')
           element.show()
+          
+    if el.is('.toggle')
+      var list = el.parents('.tree_node:first').find('ol:first')
+      el.toggleClass('closed')
+      if el.is('.closed')
+        list.slideUp()
+      unless el.is('.closed')
+        list.slideDown()
+    
+$#query
+  :keyup
+    var val = @value
+    $#viewport iframe
+      var body = $this.contents().find('body')
+      body.find('.queried').removeClass('queried')
+      unless val == ""
+        body.addClass('masked')
+        match = body.find(val)
+        match.addClass('queried')
+      if val == ""
+        body.removeClass('masked')
+      

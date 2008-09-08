@@ -37,8 +37,8 @@ module DomTree
       scripts = []
       vendor = DomTree.vendor
       scripts << (vendor/'jquery'/'jquery-1.2.6.js')
-      #scripts << (vendor/'jstree'/'jquery.listen.js')
-      #scripts << (vendor/'jstree'/'tree_component.js')
+      scripts << (vendor/'drag_drop'/'jquery.event.drag-1.0.js')
+      scripts << (vendor/'drag_drop'/'jquery.event.drop-1.0.js')
       
       Pathname.glob(DomTree.app/'embedded'/'**'/'*.html').each do |script|
         flat = script.read

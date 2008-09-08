@@ -19,7 +19,7 @@ jQuery.fn.linked_element = function() {
 };
 jQuery.fn.to_tree_nodes = function(parent) {
   var $this = this;
-  $this.children().each(function() {var $this = jQuery(this);var node = $.tree_node.clone();node.find('label:first').html($this.attr('tagName').toLowerCase());var idLabel = node.find('.id');idLabel.html($this.attr('id'));if(idLabel.html() == "") idLabel.hide();if(!$this.attr('id')) $this.attr('id', id());node.data('element', $this.attr('id'));node.attr('id', id());jQuery(this).data('node', node.attr('id'));jQuery(jQuery(this).attr('class').split(' ')).each(function(which, class) {if(class !== "")node.find('.classes').append(jQuery('<li>'+class+'</li>'));});parent.append(node);jQuery(this).to_tree_nodes(node.find('ol:first'));
+  $this.children().each(function() {var $this = jQuery(this);var node = $.tree_node.clone();node.find('label:first').html($this.attr('tagName').toLowerCase());var idLabel = node.find('.id');idLabel.html($this.attr('id'));if(idLabel.html() == "") idLabel.hide();if(!$this.attr('id')) $this.attr('id', id());node.data('element', $this.attr('id'));node.attr('id', id());jQuery(this).data('node', node.attr('id'));jQuery(jQuery(this).attr('class').split(' ')).each(function(which, class) {if(class !== "")node.find('.classes').append(jQuery('<li>'+class+'</li>'));});var attrs = node.find('dl');jQuery(this.attributes).each(function() {if(!this.name.match(/id|class/))attrs.append("<dt>"+this.name+"</dt><dd>"+this.value+"</dd>");});parent.parents('.tree_node:first').removeClass('empty');parent.append(node);jQuery(this).to_tree_nodes(node.find('ol:first'));
   });
 };
 (function($this) {
@@ -33,6 +33,9 @@ jQuery.fn.to_tree_nodes = function(parent) {
   $this.attr('src', window.location.href + "?");
   $this.bind("load", function(e) {
     var $this = jQuery(this);
+    (function($this) {
+      $this.html('');
+})(jQuery("#tree"));
     var body = $this.contents().find('body');
     body.to_tree_nodes(jQuery('#tree'));
     $this.contents().find('head').append($.canvas_stylesheet);
@@ -81,5 +84,33 @@ jQuery.fn.to_tree_nodes = function(parent) {
 }
 }
 })(jQuery("#viewport iframe"));
+    if(el.is(".toggle")) {
+      var list = el.parents('.tree_node:first').find('ol:first');
+      el.toggleClass('closed');
+      if(el.is(".closed")) {
+        list.slideUp();
+}
+      if(!(el.is(".closed"))) {
+        list.slideDown();
+}
+}
 });
 })(jQuery("#tree"));
+(function($this) {
+  $this.bind("keyup", function(e) {
+    var $this = jQuery(this);
+    var val = $this.attr('value');
+    (function($this) {
+      var body = $this.contents().find('body');
+      body.find('.queried').removeClass('queried');
+      if(!(val == "")) {
+        body.addClass('masked');
+        match = body.find(val);
+        match.addClass('queried');
+}
+      if(val == "") {
+        body.removeClass('masked');
+}
+})(jQuery("#viewport iframe"));
+});
+})(jQuery("#query"));

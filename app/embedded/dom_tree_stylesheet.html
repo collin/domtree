@@ -28,6 +28,10 @@
     width: 16px;
     height: 16px;
     top: 2px; }
+  li.empty > button.toggle {
+    background-image: none; }
+  li button.toggle.closed {
+    background-image: url(http://localhost:4567/icons/open.png); }
   li button.destroy {
     margin-right: 10px;
     opacity: .5; }
@@ -52,6 +56,7 @@
         #viewport ol .inspected li {
           background-color: white; }
       #viewport ol li {
+        display: block;
         clear: both;
         padding-left: 10px;
         margin-left: 0px; }
@@ -74,6 +79,21 @@
           margin-left: -.3em; }
           #viewport ol .element .id:before {
             content: "#"; }
+        #viewport ol .element dl, #viewport ol .element dd, #viewport ol .element dt {
+          display: inline;
+          margin: 0;
+          padding: 0; }
+        #viewport ol .element dt {
+          color: blue;
+          margin-left: .3em; }
+          #viewport ol .element dt:after {
+            content: "=";
+            color: black; }
+        #viewport ol .element dd {
+          color: red; }
+        #viewport ol .element dd:before, #viewport ol .element dd:after {
+          content: '"';
+          color: black; }
         #viewport ol .element .classes {
           display: inline;
           padding: 0;
@@ -90,17 +110,21 @@
               content: ".";
               color: black;
               font-weight: bold; }
-    #viewport #tree {
+    #viewport #tree_wrap {
+      overflow: auto;
+      width: 20%;
       z-index: 100000000000000;
-      margin-top: 0px;
-      margin-left: 0px;
       padding-left: 0px;
       height: 100%;
-      width: 20%;
       position: absolute;
-      overflow: auto;
       top: 0px;
       left: 0px; }
+      #viewport #tree_wrap #tree {
+        margin-top: 0px;
+        margin-left: 0px; }
+      #viewport #tree_wrap input {
+        width: 100%;
+        border: 1px outset; }
     #viewport iframe {
       border: 1px outset;
       position: absolute;

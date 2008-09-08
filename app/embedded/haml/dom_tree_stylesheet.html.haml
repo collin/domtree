@@ -46,6 +46,11 @@
         :width 16px
         :height 16px
         :top 2px
+      &.empty > button.toggle
+        :background-image none
+      button.toggle.closed
+        :background-image url(#{DomTree.uri_root}/icons/open.png)
+        
       button.destroy
         :margin-right 10px
         :opacity .5
@@ -70,6 +75,7 @@
           li
             :background-color white
         li
+          :display block
           :clear both
           :padding-left 10px
           :margin-left 0px
@@ -92,6 +98,21 @@
             :margin-left -.3em
             &:before
               :content "#"
+          dl, dd, dt
+            :display inline
+            :margin 0
+            :padding 0
+          dt
+            :color blue
+            :margin-left .3em
+            &:after
+              :content "="
+              :color black
+          dd
+            :color red
+          dd:before, dd:after
+            :content '"'
+            :color black
           .classes
             :display inline
             :padding 0
@@ -109,19 +130,23 @@
                 :color black
                 :font-weight bold
 
-      #tree 
+      #tree_wrap
+        :overflow auto
+        :width 20%
         :z-index 100000000000000
-        :margin
-          :top 0px
-          :left 0px
         :padding
           :left 0px
         :height 100%
-        :width 20%
         :position absolute
-        :overflow auto
         :top 0px
         :left 0px
+        #tree
+          :margin
+            :top 0px
+            :left 0px
+        input
+          :width 100%
+          :border 1px outset
         
       iframe
         :border 1px outset
