@@ -40,17 +40,25 @@ jQuery.fn.to_tree_nodes = function(parent) {
     node.find('ol:first').hide();
     node.find('.toggle:first').addClass('closed');
     node.addClass('dragging');
+    (function($this) {
+      $this.addClass('dragging');
+})($this.find("body"));
     return node
 });
   $this.bind("drag", function(e) {
     var $this = jQuery(this);
     _e = e.originalEvent
-    jQuery( e.dragProxy ).css({top:e.pageY, left:e.pageX
-    }).addClass('inspected'); 
+    jQuery(e.dragProxy).css({top:e.pageY + 10, left:e.pageX + 10
+    }).addClass('inspected');
+    var el = jQuery(_e.target);
+    if(el.is(".tree_node")) {  }
 });
   $this.bind("dragend", function(e) {
     var $this = jQuery(this);
-    jQuery( e.dragProxy ).css('position', '').removeClass('dragging');
+    jQuery(e.dragProxy).removeClass('dragging');
+    (function($this) {
+      $this.removeClass('dragging');
+})(jQuery("body"));
 });
   $this.bind("mouseover", function(e) {
     var $this = jQuery(this);

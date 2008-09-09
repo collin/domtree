@@ -2,9 +2,14 @@
   body {
     overflow: hidden;
     font-size: 100%; }
+    body.dragging {
+      cursor: move !important; }
   
   li.dragging {
-    position: absolute; }
+    position: absolute;
+    border: 1px outset;
+    background-color: white !important;
+    z-index: 10000000000; }
   li.inspected> button.toggle {
     background-image: url(http://localhost:4567/icons/close.png); }
   li.inspected> button.block {

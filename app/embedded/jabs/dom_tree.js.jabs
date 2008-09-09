@@ -70,16 +70,24 @@ $#tree
     node.find('ol:first').hide()
     node.find('.toggle:first').addClass('closed')
     node.addClass('dragging')
+    &body
+      .addClass('dragging')
     return node
+    
   :drag
     _e = e.originalEvent
-    jQuery( e.dragProxy ).css({
-      top:e.pageY, 
-      left:e.pageX
-    }).addClass('inspected'); 
+    jQuery(e.dragProxy).css({
+      top:e.pageY + 10, 
+      left:e.pageX + 10
+    }).addClass('inspected');
+    
+    var el = jQuery(_e.target)
+    if el.is('.tree_node') 
 
   :dragend
-    jQuery( e.dragProxy ).css('position', '').removeClass('dragging')
+    jQuery(e.dragProxy).removeClass('dragging')
+    $body
+      .removeClass('dragging')
 
   :mouseover
     var node = jQuery(e.target)

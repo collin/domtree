@@ -16,9 +16,15 @@
     body
       :overflow hidden
       :font-size 100%
+      &.dragging
+        :cursor move !important
     li
       &.dragging
         :position absolute
+        :border 1px outset
+        :background-color white !important
+        :z-index 10000000000
+        
       &.inspected
         &> button.toggle
           :background-image url(#{DomTree.uri_root}/icons/close.png)
