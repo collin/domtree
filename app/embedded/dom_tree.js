@@ -1,132 +1,231 @@
-var viewport = jQuery.viewport.clone();
-var _id = 0
-function id() {
-  return _id++
-}
-jQuery.fn.to_tree_nodes = function(parent) {
-  var $this = this;
-  $this.children().each(function() {var $this = jQuery(this);var node = $.tree_node.clone();node.find('label:first').html($this.attr('tagName').toLowerCase());var idLabel = node.find('.id');idLabel.html($this.attr('id'));if(idLabel.html() == "") idLabel.hide();if(!$this.attr('id')) $this.attr('id', id());node.data('element', $this.attr('id'));node.attr('id', id());jQuery(this).data('node', node.attr('id'));jQuery(jQuery(this).attr('class').split(' ')).each(function(which, class) {if(class !== "")node.find('.classes').append(jQuery('<li>'+class+'</li>'));});var attrs = node.find('dl');jQuery(this.attributes).each(function() {if(!this.name.match(/id|class/))attrs.append("<dt>"+this.name+"</dt><dd>"+this.value+"</dd>");});parent.parents('.tree_node:first').removeClass('empty');parent.append(node);jQuery(this).to_tree_nodes(node.find('ol:first'));
-  });
-};
-(function($this) {
-  $this.append(jQuery.dom_tree_stylesheet);
-})(jQuery("head"));
-(function($this) {
-  $this.html("");
-  $this.append(viewport);
-})(jQuery("body"));
-(function($this) {
-  $this.attr('src', window.location.href + "?");
-  $this.bind("load", function(e) {
-    var $this = jQuery(this);
-    (function($this) {
-      $this.html('');
-})(jQuery("#tree"));
-    var body = $this.contents().find('body');
-    body.to_tree_nodes(jQuery('#tree'));
-    $this.contents().find('head').append($.canvas_stylesheet);
-    body.bind('mouseover', function(e) {var el = jQuery(e.target);body.find('.inspected').removeClass('inspected');el.addClass('inspected');var node = el.data('node');jQuery('.inspected').removeClass('inspected');jQuery('#'+node).addClass('inspected');
+;(function(_) {
+
+_.fn.extend({
+  'join': function() {
+    return [].join.apply(this, arguments);
+  }
+  
+  ,to_tree_nodes: function(parent) {
+    return this.children().each(function() {
+      var _this = _(this)
+        ,node = _.tree_node.clone();
+       
+        _this.tree_node(node);
+        node.dom_element(_this);
+        node.tag_label().html(_this.tag_name());
+        
+        node.id_label().html(_this.id()).hide_if_empty();
+        
+        node.class_list().append(_this.classes_to_dom());
+
+        node.attribute_list().append(_this.attributes_to_dom());
+        
+        parent.parent_node().not_empty();
+        parent.append(node);
+        
+        _this.to_tree_nodes(node.child_list());
     });
+  }
+  
+  ,tag_label: function() {
+    return this.find('label:first');
+  } 
+  
+  ,id_label: function() {
+    return this.find('.id:first')
+  }
+  
+  ,hide_if_empty: function() {
+    if(this.html() == '') this.hide();
+    return this;
+  }
+  
+  ,id: function() {
+    return this.attr('id');
+  }
+  
+  ,tag_name: function() {
+    return this.attr('tagName').toLowerCase();
+  }
+  
+  ,class_list: function() {
+    return this.find('.classes:first');
+  }
+  
+  ,attribute_list: function() {
+    return this.find('dl:first');
+  }
+  
+  ,classes: function() {
+    var classes = this.attr('class');
+    if(classes == '') return [];
+    return classes.split(/ /);  
+  }
+  
+  ,classes_to_dom: function() {
+    var dom_string = this.classes().map(function(cls) {
+      return '<li>'+cls+'</li>';
+    }).join('');
+    var dom = _(dom_string);
+    return dom[0] === document ? null : dom;
+  }
+  
+  ,attributes_to_dom: function() {
+    var dom_string = _(this[0].attributes).map(function(which, attr) {
+      if(!this.name.match(/id|class/)) {
+        return '<dt>'+attr.name+'</dt><dd>'+attr.value+'</dd>';
+      }
+    }).join('');
+    
+    var dom = _(dom_string);
+    return dom[0] === document ? null : dom; 
+  }
+  
+  ,child_list: function() {
+    return this.find('ol:first');
+  }
+  
+  ,parent_node: function() {
+    return this.parents('.tree_node:first');
+  }
+  
+  ,not_empty: function() {
+    return this.removeClass('empty');
+  }
+  
+  ,dom_element: function(el) {
+    if(!el) return this.data('dom_tree element');
+    return this.data('dom_tree element', el);
+  }
+  
+  ,tree_node: function(node) {
+    if(!node) return this.data('dom_tree node');
+    return this.data('dom_tree node', node);
+  }
+  
+  ,clear: function() {
+    return this.html('');
+  }
+  
+  ,remove_class_on_all_children: function(cls) {
+    this.find('.'+cls).removeClass(cls);
+    return this;
+  }
+  
+  ,toggle_button: function() {
+    return this.find('.toggle:first');
+  }
+  
+  ,collapse_children: function(slide) {
+    if(slide)
+      this.child_list().slideUp();
+    else
+      this.child_list().hide();
+    this.toggle_button().addClass('closed');
+    return this;
+  }
+  
+  ,expand_children: function(slide) {
+    if(slide)
+      this.child_list().slideDown();
+    else
+      this.child_list().show();
+    this.toggle_button().removeClass('closed');
+    return this;
+  }
+  
+  ,dragstart: function(fn) {
+    return this.bind('dragstart', fn);
+  }
+  
+  ,dragend: function(fn) {
+    return this.bind('dragend', fn);
+  }
 });
-})(jQuery("#viewport iframe"));
-(function($this) {
-  $this.bind("dragstart", function(e) {
-    var $this = jQuery(this);
-    var el = jQuery(e.target);
-    if(!(el.is("button.drag"))) {
-      return false
+
+var viewport = _.viewport.clone()
+  ,tree = viewport.find('#tree')
+  ,iframe = viewport.find('iframe')
+  
+  ,inspection_class = 'inspected'
+  ,drag_class = 'dragging';
+
+_('head').append(_.dom_tree_stylesheet);
+_('body').clear().append(viewport);
+
+function clear_all_inspections() {
+  iframe.contents().find('body').remove_class_on_all_children(inspection_class);
+  viewport.remove_class_on_all_children(inspection_class);
 }
-    var node = el.parents('.tree_node:first');
-    node.find('ol:first').hide();
-    node.find('.toggle:first').addClass('closed');
-    node.addClass('dragging');
-    (function($this) {
-      $this.addClass('dragging');
-})($this.find("body"));
-    return node
-});
-  $this.bind("drag", function(e) {
-    var $this = jQuery(this);
-    _e = e.originalEvent
-    jQuery(e.dragProxy).css({top:e.pageY + 10, left:e.pageX + 10
-    }).addClass('inspected');
-    var el = jQuery(_e.target);
-    if(el.is(".tree_node")) {  }
-});
-  $this.bind("dragend", function(e) {
-    var $this = jQuery(this);
-    jQuery(e.dragProxy).removeClass('dragging');
-    (function($this) {
-      $this.removeClass('dragging');
-})(jQuery("body"));
-});
-  $this.bind("mouseover", function(e) {
-    var $this = jQuery(this);
-    var node = jQuery(e.target);
-    if(!(node.is(".tree_node"))) {
-      node = node.parents('.tree_node:first');
-}
-    (function($this) {
-      $this.removeClass('inspected');
-})(jQuery(".inspected"));
-    node.addClass('inspected');
-    (function($this) {
-      $this.contents().find('.inspected').removeClass('inspected');
-      var element = $this.contents().find('#' + node.data('element'));
-      element.addClass('inspected');
-})(jQuery("#viewport iframe"));
-});
-  $this.bind("click", function(e) {
-    var $this = jQuery(this);
-    var el = jQuery(e.target);
-    if(el.is(".destroy")) {
-      var node = el.parents('.tree_node:first');
-      (function($this) {
-        var element = $this.contents().find('#' + node.data('element'));
+
+iframe
+  .load(function() {
+    var contents = iframe.contents()
+      ,body = contents.find('body');
+    
+    body.to_tree_nodes(tree.clear());
+    
+    contents.find('head').append(_.canvas_stylesheet);
+    body.mouseover(function(e) {
+      clear_all_inspections();
+      
+      _(e.target)
+        .addClass(inspection_class)
+        .tree_node()
+          .addClass(inspection_class);
+    });
+  })
+  .attr('src', window.location.href + "?");
+  
+  tree
+    .dragstart(function(e) {
+      var el = jQuery(e.target)
+      if(!el.is('.drag')) return false;
+      return el.parent_node()
+        .collapse_children()
+        .addClass(drag_class);
+    })
+    .drag(function(e) {
+      _(e.dragProxy)
+        .css({
+          top:e.pageY + 10, 
+          left:e.pageX + 10
+        })
+        .addClass(inspection_class);
+    })
+    .dragend(function(e) {
+      _(e.dragProxy).removeClass(drag_class)
+    })
+    .mouseover(function(e) {
+      var node = _(e.target);
+      if(!node.is('.tree_node')) node = node.parent_node();
+      clear_all_inspections();
+      node
+        .addClass(inspection_class)
+        .dom_element()
+          .addClass(inspection_class);      
+    })
+    .click(function(e) {
+      var el = _(e.target)
+        ,node = el.parent_node();
+      if(el.is('.destroy')) {
+        node
+          .dom_element()
+            .remove();
         node.remove();
-        element.remove();
-})(jQuery("#viewport iframe"));
-}
-    (function($this) {
-      if(el.is(".block")) {
-        var node = el.parents('.tree_node:first');
+      }
+      if(el.is('.block')) {
         el.toggleClass('active');
-        var element = $this.contents().find('#' + node.data('element'))         
-        if(el.is(".active")) {
-          element.hide();
-}
-        if(!(el.is(".active"))) {
-          element.show();
-}
-}
-})(jQuery("#viewport iframe"));
-    if(el.is(".toggle")) {
-      var list = el.parents('.tree_node:first').find('ol:first');
-      el.toggleClass('closed');
-      if(el.is(".closed")) {
-        list.slideUp();
-}
-      if(!(el.is(".closed"))) {
-        list.slideDown();
-}
-}
-});
-})(jQuery("#tree"));
-(function($this) {
-  $this.bind("keyup", function(e) {
-    var $this = jQuery(this);
-    var val = $this.attr('value');
-    (function($this) {
-      var body = $this.contents().find('body');
-      body.find('.queried').removeClass('queried');
-      if(!(val == "")) {
-        body.addClass('masked');
-        match = body.find(val);
-        match.addClass('queried');
-}
-      if(val == "") {
-        body.removeClass('masked');
-}
-})(jQuery("#viewport iframe"));
-});
-})(jQuery("#query"));
+        if(el.is('.active'))
+          node.dom_element().hide();
+        else
+          node.dom_element().show();
+      }
+      if(el.is('.toggle')) {
+        if(el.is('.closed'))
+          node.expand_children(true);
+        else
+          node.collapse_children(true);
+      }
+    })
+})(jQuery);
