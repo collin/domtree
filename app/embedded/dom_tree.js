@@ -1,5 +1,84 @@
 ;(function(_) {
 
+_.special_keys = {
+	27:'esc',
+	27:'escape',
+	9:'tab',
+	32:'space',
+	13:'return',
+	13:'enter',
+	8:'backspace',
+
+	145:'scrolllock',
+	145:'scroll_lock',
+	145:'scroll',
+	20:'capslock',
+	20:'caps_lock',
+	20:'caps',
+	144:'numlock',
+	144:'num_lock',
+	144:'num',
+	
+	19:'pause',
+	19:'break',
+	
+	45:'insert',
+	36:'home',
+	46:'delete',
+	35:'end',
+	
+	33:'pageup',
+	33:'page_up',
+	33:'pu',
+
+	34:'pagedown',
+	34:'page_down',
+	34:'pd',
+
+	37:'left',
+	38:'up',
+	39:'right',
+	40:'down',
+
+	112:'f1',
+	113:'f2',
+	114:'f3',
+	115:'f4',
+	116:'f5',
+	117:'f6',
+	118:'f7',
+	119:'f8',
+	120:'f9',
+	121:'f10',
+	122:'f11',
+	123:'f12',
+	
+	188:',',
+	190:'.'
+};
+
+_.shift_nums = {
+	"`":"~",
+	"1":"!",
+	"2":"@",
+	"3":"#",
+	"4":"$",
+	"5":"%",
+	"6":"^",
+	"7":"&",
+	"8":"*",
+	"9":"(",
+	"0":")",
+	"-":"_",
+	"=":"+",
+	";":":",
+	"'":"\"",
+	",":"<",
+	".":">",
+	"/":"?",
+	"\\":"|"
+};
+
 _.fn.extend({
   'join': function() {
     return [].join.apply(this, arguments);
@@ -12,19 +91,22 @@ _.fn.extend({
        
         _this.tree_node(node);
         node.dom_element(_this);
-        node.tag_label().html(_this.tag_name());
         
-        node.id_label().html(_this.id()).hide_if_empty();
-        
-        node.class_list().append(_this.classes_to_dom());
-
-        node.attribute_list().append(_this.attributes_to_dom());
+        node.paint_node(_this);
         
         parent.parent_node().not_empty();
         parent.append(node);
         
         _this.to_tree_nodes(node.child_list());
     });
+  }
+  
+  ,paint_node: function(el) {
+    this.tag_label().html(el.tag_name());
+    this.id_label().html(el.id()).hide_if_empty();
+    this.class_list().append(el.classes_to_dom());
+    this.attribute_list().append(el.attributes_to_dom());
+    return this;
   }
   
   ,tag_label: function() {
@@ -94,12 +176,18 @@ _.fn.extend({
   }
   
   ,dom_element: function(el) {
-    if(!el) return this.data('dom_tree element');
-    return this.data('dom_tree element', el);
+    if(!el) {
+      var dom = this.data('dom_tree element');
+      return dom === undefined ? _([]) : dom; 
+    }
+    var dom = this.data('dom_tree element', el);
   }
   
   ,tree_node: function(node) {
-    if(!node) return this.data('dom_tree node');
+    if(!node) {
+      var tree_node = this.data('dom_tree node');
+      return tree_node === undefined ? _([]) : tree_node; 
+    }
     return this.data('dom_tree node', node);
   }
   
@@ -141,6 +229,135 @@ _.fn.extend({
   ,dragend: function(fn) {
     return this.bind('dragend', fn);
   }
+  
+  ,size_to_fit: function() {
+    return this.attr('size', this.val().length || 1);
+  }
+  
+  ,edit_tag_name: function() {
+    var label = this.tag_label()
+      ,input = _.tag_input;
+    
+    label.after(input.show());
+    input.val(label.text());
+    label.hide();
+    
+    input
+      .size_to_fit()
+      .one('blur', function() {
+        label.html(input.val());
+        _(document.body).append(input.hide());
+        label.show();
+      });
+    
+    setTimeout(function(){input.focus();}, 1);
+    return this;
+  }
+  
+  ,edit_id: function() {
+    var label = this.id_label()
+      ,input = _.id_input;
+    
+    label.after(input.show());
+    input.val(label.text());
+    label.clear().css('display', '');
+    
+    input
+      .size_to_fit()
+      .one('blur', function() {
+        label.html(input.val());
+        _(document.body).append(input.hide());
+      });
+    
+    setTimeout(function(){input.focus();}, 1);
+    return this;
+  } 
+  ,edit_classes: function() {
+    var class_list = this.class_list()
+      ,first_class = class_list.eq(0);
+    
+    if(first_class) return first_class.edit_class();
+    
+    var cls = _('<li>');
+    class_list.append(cls);
+    return this.edit_class(cls);    
+  }
+  
+  ,edit_class: function(label) {
+    var input = _.class_input;
+    
+    label.after(input.show());
+    input.val(label.text());
+    label.clear().css('display', '');
+    
+    input
+      .size_to_fit()
+      .one('blur', function() {
+        label.html(input.val());
+        _(document.body).append(input.hide());
+      });
+    
+    setTimeout(function(){input.focus();}, 1);
+    return this;
+  }
+  
+  ,blur_all: function() {
+    this.find('input').blur();
+    return this;
+  }
+  
+  ,keybindings: function(bindings) {
+    var old = this.data('keybindings') || {};
+    if(bindings) {
+      return this.data('keybindings', _.extend(old, bindings));
+    } 
+    return old;
+  }
+  
+  ,keybind: function(binding, fn) {
+    var bindings = {}
+      ,that = this;
+    bindings[binding] = fn;
+    this.keybindings(bindings);
+    if(!this.data('keybound')) {
+      this.data('keybound', true);
+      this.keydown(function(e){
+        var bindings = that.keybindings()
+          ,binding
+          ,keys
+          ,modified
+          ,matched
+          ,modKeys = 'shift ctrl alt meta'.split(/ /)
+          ,key; 
+        
+        console.log(_.special_keys[e.keyCode])
+        if(e.which) key = String.fromCharCode(e.which);
+        else if(_.special_keys[e.keyCode]) key = _.special_keys[e.keyCode];
+        else if(code == 188) key=","; //If the user presses , when the type is onkeydown
+			  else if(code == 190) key="."; //If the user presses , when the type is onkeydown
+        
+        for(binding in bindings) {
+          modified = true;
+          _(modKeys).each(function() {
+            // false if the modifier is wanted, but it isn't given
+            if(binding.match(this) !== null) modified = e[this+"Key"];
+            //console.log(binding.match(this) !== null, this, binding, modified, e[this+"Key"])
+          });
+          keys = binding.replace(/shift|ctrl|alt|meta/, '').split(/\++/);
+          matched = false;
+          _(keys).each(function() {
+            console.log("THIS:", this, "KEY", key)
+            if(this !== "") matched = (this == key);
+          });
+          if(modified && matched) {
+            bindings[binding](e);
+            e.preventDefault();
+          }
+        }
+      });
+    }
+    return this;
+  }
 });
 
 var viewport = _.viewport.clone()
@@ -157,6 +374,37 @@ function clear_all_inspections() {
   iframe.contents().find('body').remove_class_on_all_children(inspection_class);
   viewport.remove_class_on_all_children(inspection_class);
 }
+
+function edit_id() {
+  var node = _.tag_input.parent_node();
+  node.blur_all();
+  node.edit_id();
+}
+
+function edit_classes() {
+  var node = _.id_input.parent_node();
+  node.blur_all();
+  node.edit_classes();
+}
+
+_.tag_input
+  .keyup(function(e) {
+    _.tag_input.size_to_fit();
+  })
+  .keybind('tab', edit_id)
+  .keybind('shift+3', edit_id)
+  .keybind('space', edit_id)
+  .keybind('shift+tab', edit_classes)
+  .keybind('.', edit_classes);
+
+  
+_.id_input
+  .keyup(function(e) {
+    _.id_input.size_to_fit();
+  })
+  .keybind('tab', edit_classes)
+  .keybind('.', edit_classes)
+  .keybind('space', edit_classes);
 
 iframe
   .load(function() {
@@ -208,6 +456,8 @@ iframe
     .click(function(e) {
       var el = _(e.target)
         ,node = el.parent_node();
+      // Destroying the inputs not desired.
+      node.blur_all();
       if(el.is('.destroy')) {
         node
           .dom_element()
@@ -228,4 +478,14 @@ iframe
           node.collapse_children(true);
       }
     })
+    
+    _(window)
+      .click(function() {this.focus();})
+      .bind('keydown', 'return', function(e) {
+        tree.blur_all();
+        var node = _.tree_node.clone().edit_tag_name();
+        node.id_label().hide_if_empty();
+        tree.append(node);
+      });
+      
 })(jQuery);

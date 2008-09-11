@@ -3802,19 +3802,359 @@ var drop = $.event.special.drop = {
 /*******************************************************************************************/
 })(jQuery); // confine scope
 
+/*
+(c) Copyrights 2007 - 2008
+
+Original idea by by Binny V A, http://www.openjs.com/scripts/events/keyboard_shortcuts/
+ 
+jQuery Plugin by Tzury Bar Yochay 
+tzury.by@gmail.com
+http://evalinux.wordpress.com
+http://facebook.com/profile.php?id=513676303
+
+Project's sites: 
+http://code.google.com/p/js-hotkeys/
+http://github.com/tzuryby/hotkeys/tree/master
+
+License: same as jQuery license. 
+
+USAGE:
+    // simple usage
+    $(document).bind('keydown', 'Ctrl+c', function(){ alert('copy anyone?');});
+    
+    // special options such as disableInIput
+    $(document).bind('keydown', {combi:'Ctrl+x', disableInInput: true} , function() {});
+    
+Note:
+    This plugin overrides jQuery.fn.find, jQuery.fn.bind and jQuery.fn.unbind
+    
+*/
+
+
+(function (jQuery){
+    // keep reference to the original $.fn.bind and $.fn.unbind
+    jQuery.fn.__bind__ = jQuery.fn.bind;
+    jQuery.fn.__unbind__ = jQuery.fn.unbind;
+    jQuery.fn.__find__ = jQuery.fn.find;
+    
+    var hotkeys = {
+        verison: '0.7.7',
+        override: /keydown|keypress|keyup/g,        
+        triggersMap: {},
+        
+        specialKeys: {
+            27: 'esc', 9: 'tab', 32:'space', 13: 'return', 8:'backspace', 145: 'scroll', 
+            20: 'capslock', 144: 'numlock', 19:'pause', 45:'insert', 36:'home', 46:'del',
+            35:'end', 33: 'pageup', 34:'pagedown', 37:'left', 38:'up', 39:'right',40:'down', 
+            112:'f1',113:'f2', 114:'f3', 115:'f4', 116:'f5', 117:'f6', 118:'f7', 119:'f8', 
+            120:'f9', 121:'f10', 122:'f11', 123:'f12' 
+        },
+        
+        // In FF: Numbers on the Num Pad represents by the same the same decimal values of  
+        // the `abcdefghi ascii characters  (96, 97, ...  105).
+        // as a result, when clicking on '0' key in the num pad yields keyCode=97
+        // as a result, String.fromCharCode(65) -> 'a'
+        // therefore, I added this mapping for the 10 problematic cases.
+        firefoxNumPad: { 96: '0', 97:'1', 98: '2', 99: '3', 100: '4', 
+            101: '5', 102: '6', 103: '7', 104: '8', 105: '9' },
+        
+            shiftNums: {
+                "`":"~", "1":"!", "2":"@", "3":"#", "4":"$", "5":"%", "6":"^", "7":"&", 
+                "8":"*", "9":"(", "0":")", "-":"_", "=":"+", ";":":", "'":"\"", ",":"<", 
+                ".":">",  "/":"?",  "\\":"|" },
+        
+        newTrigger: function (type, combi, callback) { 
+            // {'keyup': {'ctrl': {cb:, propagate, disableInInput}}}
+            var result = {};
+            result[type] = {};
+            result[type][combi] = {cb: callback, propagate: true, disableInInput: false};                
+            return result;
+        }
+    };
+    // a wrapper around of $.fn.find 
+    // wanted to add .query property which represents the selector
+    // see more at: http://groups.google.com/group/jquery-en/browse_thread/thread/18f9825e8d22f18d
+    jQuery.fn.find = function( selector ) {
+        // adding this line so to retrieve this later
+        this.query=selector;
+        return jQuery.fn.__find__.apply(this, arguments);
+	};
+    
+    jQuery.fn.unbind = function (type, combi, fn){
+        if (jQuery.isFunction(combi)){
+            fn = combi;
+            combi = null;
+        }
+        if (combi && typeof combi === 'string'){
+            var selectorId = ((this.prevObject && this.prevObject.query) || 
+                (this[0].id && this[0].id) || this[0]).toString();
+            type = type.split(' ');
+            for (var x=0; x<type.length; x++){
+                delete hotkeys.triggersMap[selectorId][type[x]][combi];
+            }
+        }
+        // call jQuery original unbind
+        return  this.__unbind__(type, fn);
+    };
+    
+    jQuery.fn.bind = function(type, data, fn){
+        // grab keyup,keydown,keypress
+        var handle = type.match(hotkeys.override);
+        
+        if (jQuery.isFunction(data) || !handle){
+            // call jQuery.bind only
+            return this.__bind__(type, data, fn);
+        }
+        else{
+            // split the job
+            var result = null,            
+            // pass the rest to the original $.fn.bind
+            pass2jq = jQuery.trim(type.replace(hotkeys.override, ''));
+            if (typeof data === "string"){
+                data = {'combi': data};
+            }            
+            if(data.combi){
+                for (var x=0; x < handle.length; x++){
+                    var eventType = handle[x];
+                    var combi = data.combi.toLowerCase(),
+                        trigger = hotkeys.newTrigger(eventType, combi, fn),
+                        selectorId = 
+                            ((this.prevObject && this.prevObject.query) || 
+                                (this[0].id && this[0].id) || this[0]).toString();
+                    trigger[eventType][combi].propagate = data.propagate;
+                    trigger[eventType][combi].disableInInput = data.disableInInput;
+                    
+                    // first time selector is bounded
+                    if (!hotkeys.triggersMap[selectorId]) {
+                        hotkeys.triggersMap[selectorId] = trigger;
+                    }
+                    // first time selector is bended with this type
+                    else if (!hotkeys.triggersMap[selectorId][eventType]) {
+                        hotkeys.triggersMap[selectorId][eventType] = trigger[eventType];
+                    }
+                    // currently overriding previous settings
+                    else{
+                        hotkeys.triggersMap[selectorId][eventType][combi] = trigger[eventType][combi];
+                    }
+                    
+                    // add attribute and call $.event.add per matched element
+                    result = this.each(function(){
+                        // jQuery wrapper for the current element
+                        var jqElem = jQuery(this);
+                        
+                        // element already associated with another collection
+                        if (jqElem.attr('hkId') && jqElem.attr('hkId') !== selectorId){
+                            selectorId = jqElem.attr('hkId') + ";" + selectorId;
+                        }
+                        
+                        jqElem.attr('hkId', selectorId);
+                        jQuery.event.add(this, eventType, hotkeys.handler);
+                    });
+                }
+            }
+            // see if there are other types, pass them to the original $.fn.bind
+            if (pass2jq){
+                // call original jQuery.bind()
+                result = this.__bind__(pass2jq, data, fn);
+            }
+            return result;
+        }
+    };
+    // work-around for opera and safari where (sometimes) the target is the element which was last 
+    // clicked with the mouse and not the document event it would make sense to get the document
+    hotkeys.findElement = function (elem){
+        if (!jQuery(elem).attr('hkId')){
+            if (jQuery.browser.opera || jQuery.browser.safari){
+                while (!jQuery(elem).attr('hkId') && elem.parentNode){
+                    elem = elem.parentNode;
+                }
+            }
+        }
+        return elem;
+    };
+    // the event handler
+    hotkeys.handler = function(event) {
+        var target = hotkeys.findElement(event.currentTarget), 
+            jTarget = jQuery(target),
+            ids = jTarget.attr('hkId');
+        
+        if(ids){
+            ids = ids.split(';');
+            var code = event.which,
+                type = event.type,
+                special = hotkeys.specialKeys[code],
+                // prevent f5 overlapping with 't' (or f4 with 's', etc.)
+                character = !special && String.fromCharCode(code).toLowerCase(),
+                shift = event.shiftKey,
+                ctrl = event.ctrlKey,            
+                // patch for jquery 1.2.5 && 1.2.6 see more at:  
+                // http://groups.google.com/group/jquery-en/browse_thread/thread/83e10b3bb1f1c32b
+                alt = event.altKey || event.originalEvent.altKey,
+                mapPoint = null;
+            
+            // check for the NumPad overlapping issue in FireFox
+            if (jQuery.browser.mozilla){
+                if (code >= 96 && code <= 105){
+                    character = hotkeys.firefoxNumPad[code];
+                }
+            }
+            
+            for (var x=0; x < ids.length; x++){
+                if (hotkeys.triggersMap[ids[x]][type]){
+                    mapPoint = hotkeys.triggersMap[ids[x]][type];
+                    break;
+                }
+            }
+            
+            //find by: id.type.combi.options            
+            if (mapPoint){ 
+                var trigger;
+                // event type is associated with the hkId
+                if(!shift && !ctrl && !alt) { // No Modifiers
+                    trigger = mapPoint[special] ||  (character && mapPoint[character]);
+                }
+                else{
+                    // check combinations (alt|ctrl|shift+anything)
+                    var modif = '';
+                    if(alt) {modif +='alt+';}
+                    if(ctrl) {modif+= 'ctrl+';}
+                    if(shift) {modif += 'shift+';}
+                    
+                    // modifiers + special keys or modifiers + characters or modifiers + shift characters
+                    trigger = mapPoint[modif+special];
+                    if (!trigger){
+                        if (character){
+                            trigger = mapPoint[modif+character] 
+                                || mapPoint[modif+hotkeys.shiftNums[character]];
+                        }
+                    }
+                }
+                if (trigger){
+                    if(trigger.disableInInput){
+                        // double check event.currentTarget and event.target
+                        var elem = jQuery(event.target);
+                        if (jTarget.is("input") || jTarget.is("textarea") 
+                            || elem.is("input") || elem.is("textarea")) {
+                            return true;
+                        }
+                    }
+                    // call the registered callback function
+                    trigger.cb(event);
+                    if(!trigger.propagate) {
+                        event.stopPropagation();
+                        event.preventDefault();
+                    }
+                    return trigger.propagate;
+                }
+            }
+            // no match, return true
+            return true;
+        }
+    };
+    // place it under window so it can be extended and overridden by others
+    window.hotkeys = hotkeys;
+    return jQuery;
+})(jQuery);
+
+
 jQuery.jstree_stylesheet = jQuery("<style>    .rtl * {  	direction:rtl;  }  .rtl ul {  	margin:0 5px 0 0;  }  .rtl li {  	padding:0 15px 0 0;  }  .rtl li.last {  	background:url(\"images/lastli_rtl.gif\") right top no-repeat;  }  .rtl li.open {  	background:url(\"images/fminus_rtl.gif\") right 6px no-repeat;  }  .rtl li.closed {  	background:url(\"images/fplus_rtl.gif\") right 4px no-repeat;  }  .rtl li a,  .rtl li span {  	float:right;  	padding:1px 23px 1px 4px !important;  	background-position:right 1px;   	margin-right:1px;  }  .rtl li a:hover {  	background-color: #e7f4f9;  	border:1px solid #d8f0fa;  	padding:0px 23px 0px 3px !important;  	background-position:right 0px;   	margin-right:0px;  }  .rtl li a.clicked,  .rtl li a.clicked:hover,  .rtl li span.clicked {  	background-color: #beebff;  	border:1px solid #99defd;  	padding:0px 23px 0px 3px !important;  	background-position:right 0px;   	margin-right:0px;  }  .rtl li span.clicked {  	padding:0px 21px 0px 3px !important;  }  .rtl ul ul {  	background:url(\"images/dot.gif\") right 1px repeat-y;  }  .rtl li {  	background:url(\"images/li.gif\") right center no-repeat;  }  .rtl #dragged li.open {  	background-position: right 5px;  }</style>");
 
 jQuery.viewporb = jQuery("<div id='viewport'></div>");
 
 jQuery.viewport = jQuery("<div id='viewport'>  <div id='tree_wrap'>    <!-- %input#query{:type=>'text'} -->    <ol id='tree'></ol>  </div>  <iframe></iframe></div>");
 
-jQuery.dom_tree_stylesheet = jQuery("<style>  body {    overflow: hidden;    font-size: 100%; }    body.dragging {      cursor: move !important; }    li.dragging {    position: absolute;    border: 1px outset;    background-color: white !important;    z-index: 10000000000; }  li.inspected> button.toggle {    background-image: url(http://localhost:4567/icons/close.png); }  li.inspected> button.block {    background-color: transparent;    background-image: url(http://localhost:4567/icons/block.png); }  li.inspected> button.destroy {    background-color: transparent;    background-image: url(http://localhost:4567/icons/small_cross.png); }  li.inspected> button.drag {    cursor: move;    background-color: transparent;    background-image: url(http://localhost:4567/icons/drag_handle.gif); }  li button.block, li button.destroy, li button.drag, li button.toggle {    border: none;    display: inline;    position: relative;    top: 4px;    float: left;    width: 12px;    height: 12px;    background: none; }  li button.toggle {    width: 16px;    height: 16px;    top: 2px; }  li.empty > button.toggle {    background-image: none; }  li button.toggle.closed {    background-image: url(http://localhost:4567/icons/open.png); }  li button.destroy {    margin-right: 10px;    opacity: .5; }    li button.destroy:hover {      opacity: 1; }  li button.block {    margin-right: 10px; }    li button.block.active {      background-image: url(http://localhost:4567/icons/active_block.png); }    #viewport {    font-size: .7em;    font-family: sans-serif; }    #viewport ol, #viewport ul {      list-style: none; }    #viewport ol {      white-space: nowrap;      background-color: white;      padding: 0; }      #viewport ol .inspected {        background-color: #fcc; }        #viewport ol .inspected li {          background-color: white; }      #viewport ol li {        display: block;        clear: both;        padding-left: 10px;        margin-left: 0px; }      #viewport ol .element {        display: inline;        position: relative;        line-height: 20px; }        #viewport ol .element:before {          content: \"<\";          margin-right: -.3em; }        #viewport ol .element:after {          content: \">\";          margin-left: -.3em; }        #viewport ol .element label, #viewport ol .element .id {          display: inline; }        #viewport ol .element label {          color: blue; }        #viewport ol .element .id {          color: red;          margin-left: -.3em; }          #viewport ol .element .id:before {            content: \"#\"; }        #viewport ol .element dl, #viewport ol .element dd, #viewport ol .element dt {          display: inline;          margin: 0;          padding: 0; }        #viewport ol .element dt {          color: blue;          margin-left: .3em; }          #viewport ol .element dt:after {            content: \"=\";            color: black; }        #viewport ol .element dd {          color: red; }        #viewport ol .element dd:before, #viewport ol .element dd:after {          content: '\"';          color: black; }        #viewport ol .element .classes {          display: inline;          padding: 0;          margin: 0; }          #viewport ol .element .classes li {            padding: 0;            margin: 0;            background: transparent;            display: inline;            color: green; }            #viewport ol .element .classes li:first-child {              margin-left: -.3em; }            #viewport ol .element .classes li:before {              content: \".\";              color: black;              font-weight: bold; }    #viewport #tree_wrap {      overflow: auto;      width: 20%;      z-index: 100000000000000;      padding-left: 0px;      height: 100%;      position: absolute;      top: 0px;      left: 0px; }      #viewport #tree_wrap #tree {        margin-top: 0px;        margin-left: 0px; }      #viewport #tree_wrap input {        width: 100%;        border: 1px outset; }    #viewport iframe {      border: 1px outset;      position: absolute;      left: 20%;      width: 80%;      height: 100%;      top: 0px;      right: 0px; }</style>");
+jQuery.dom_tree_stylesheet = jQuery("<style>  body {    overflow: hidden;    font-size: 100%; }    body.dragging {      cursor: move !important; }    li.dragging {    position: absolute;    border: 1px outset;    background-color: white !important;    z-index: 10000000000; }  li.inspected> button.toggle {    background-image: url(http://localhost:4567/icons/close.png); }  li.inspected> button.block {    background-color: transparent;    background-image: url(http://localhost:4567/icons/block.png); }  li.inspected> button.destroy {    background-color: transparent;    background-image: url(http://localhost:4567/icons/small_cross.png); }  li.inspected> button.drag {    cursor: move;    background-color: transparent;    background-image: url(http://localhost:4567/icons/drag_handle.gif); }  li button.block, li button.destroy, li button.drag, li button.toggle {    border: none;    display: inline;    position: relative;    top: 4px;    float: left;    width: 12px;    height: 12px;    background: none; }  li button.toggle {    width: 16px;    height: 16px;    top: 2px; }  li button.toggle.closed {    background-image: url(http://localhost:4567/icons/open.png); }  li.empty > button.toggle {    visibility: hidden; }  li button.destroy {    margin-right: 10px;    opacity: .5; }    li button.destroy:hover {      opacity: 1; }  li button.block {    margin-right: 10px; }    li button.block.active {      background-image: url(http://localhost:4567/icons/active_block.png); }    #viewport {    font-size: .7em;    font-family: sans-serif; }    #viewport ol, #viewport ul {      list-style: none; }    #viewport ol {      white-space: nowrap;      background-color: white;      padding: 0; }      #viewport ol .inspected {        background-color: #fcc; }        #viewport ol .inspected li {          background-color: white; }      #viewport ol li {        display: block;        clear: both;        padding-left: 10px;        margin-left: 0px; }      #viewport ol .element {        display: inline;        position: relative;        line-height: 20px; }        #viewport ol .element:before {          content: \"<\";          margin-right: -.3em; }        #viewport ol .element:after {          content: \">\";          margin-left: -.3em; }        #viewport ol .element label, #viewport ol .element .id {          display: inline; }        #viewport ol .element label {          color: blue; }        #viewport ol .element .id {          color: red;          margin-left: -.3em; }        #viewport ol .element .id:before,       #viewport ol .element .id_input:before {          content: \"#\"; }        #viewport ol .element dl, #viewport ol .element dd, #viewport ol .element dt {          display: inline;          margin: 0;          padding: 0; }        #viewport ol .element dt {          color: blue;          margin-left: .3em; }          #viewport ol .element dt:after {            content: \"=\";            color: black; }        #viewport ol .element dd {          color: red; }        #viewport ol .element dd:before, #viewport ol .element dd:after {          content: '\"';          color: black; }        #viewport ol .element .classes {          display: inline;          padding: 0;          margin: 0; }          #viewport ol .element .classes li {            padding: 0;            margin: 0;            background: transparent;            display: inline;            color: green; }            #viewport ol .element .classes li:first-child {              margin-left: -.3em; }            #viewport ol .element .classes li:before {              content: \".\";              color: black;              font-weight: bold; }    #viewport #tree_wrap {      overflow: auto;      width: 40%;      z-index: 100000000000000;      padding-left: 0px;      height: 100%;      position: absolute;      top: 0px;      left: 0px; }      #viewport #tree_wrap #tree {        margin-top: 0px;        margin-left: 0px; }      #viewport #tree_wrap input {        display: inline;        position: relative;        left: -2px;        background-color: white;        font-size: inherit;        border: 1px outset; }    #viewport iframe {      border: 1px outset;      position: absolute;      left: 40%;      width: 60%;      height: 100%;      top: 0px;      right: 0px; }</style>");
 
-jQuery.tree_node = jQuery("<li class='tree_node empty'>  <button class='destroy'></button>  <button class='block'></button>  <button class='drag'></button>  <button class='toggle'></button>  <div class='element'>    <label>Label</label>    <div class='id'></div>    <ul class='classes'></ul>    <dl></dl>  </div>  <ol></ol></li>");
+jQuery.tree_node = jQuery("<li class='tree_node empty'>  <button class='destroy'></button>  <button class='block'></button>  <!-- %button.drag -->  <button class='toggle'></button>  <div class='element'>    <label></label>    <div class='id'></div>    <ul class='classes'></ul>    <dl></dl>  </div>  <ol></ol></li>");
 
 jQuery.canvas_stylesheet = jQuery("<style>  .inspected {    outline: 2px red dashed; }    .masked * {    outline: 2px blue dashed;    position: relative;    z-index: 1000; }</style>");
 
+jQuery.tag_input = jQuery("<input type='text' />");
+
+jQuery.id_input = jQuery("<input class='id_input' type='text' />");
+
+jQuery.class_input = jQuery("<input class='class_input' type='text' />");
+
 ;(function(_) {
+
+_.special_keys = {
+	27:'esc',
+	27:'escape',
+	9:'tab',
+	32:'space',
+	13:'return',
+	13:'enter',
+	8:'backspace',
+
+	145:'scrolllock',
+	145:'scroll_lock',
+	145:'scroll',
+	20:'capslock',
+	20:'caps_lock',
+	20:'caps',
+	144:'numlock',
+	144:'num_lock',
+	144:'num',
+	
+	19:'pause',
+	19:'break',
+	
+	45:'insert',
+	36:'home',
+	46:'delete',
+	35:'end',
+	
+	33:'pageup',
+	33:'page_up',
+	33:'pu',
+
+	34:'pagedown',
+	34:'page_down',
+	34:'pd',
+
+	37:'left',
+	38:'up',
+	39:'right',
+	40:'down',
+
+	112:'f1',
+	113:'f2',
+	114:'f3',
+	115:'f4',
+	116:'f5',
+	117:'f6',
+	118:'f7',
+	119:'f8',
+	120:'f9',
+	121:'f10',
+	122:'f11',
+	123:'f12',
+	
+	188:',',
+	190:'.'
+};
+
+_.shift_nums = {
+	"`":"~",
+	"1":"!",
+	"2":"@",
+	"3":"#",
+	"4":"$",
+	"5":"%",
+	"6":"^",
+	"7":"&",
+	"8":"*",
+	"9":"(",
+	"0":")",
+	"-":"_",
+	"=":"+",
+	";":":",
+	"'":"\"",
+	",":"<",
+	".":">",
+	"/":"?",
+	"\\":"|"
+};
 
 _.fn.extend({
   'join': function() {
@@ -3828,19 +4168,22 @@ _.fn.extend({
        
         _this.tree_node(node);
         node.dom_element(_this);
-        node.tag_label().html(_this.tag_name());
         
-        node.id_label().html(_this.id()).hide_if_empty();
-        
-        node.class_list().append(_this.classes_to_dom());
-
-        node.attribute_list().append(_this.attributes_to_dom());
+        node.paint_node(_this);
         
         parent.parent_node().not_empty();
         parent.append(node);
         
         _this.to_tree_nodes(node.child_list());
     });
+  }
+  
+  ,paint_node: function(el) {
+    this.tag_label().html(el.tag_name());
+    this.id_label().html(el.id()).hide_if_empty();
+    this.class_list().append(el.classes_to_dom());
+    this.attribute_list().append(el.attributes_to_dom());
+    return this;
   }
   
   ,tag_label: function() {
@@ -3910,12 +4253,18 @@ _.fn.extend({
   }
   
   ,dom_element: function(el) {
-    if(!el) return this.data('dom_tree element');
-    return this.data('dom_tree element', el);
+    if(!el) {
+      var dom = this.data('dom_tree element');
+      return dom === undefined ? _([]) : dom; 
+    }
+    var dom = this.data('dom_tree element', el);
   }
   
   ,tree_node: function(node) {
-    if(!node) return this.data('dom_tree node');
+    if(!node) {
+      var tree_node = this.data('dom_tree node');
+      return tree_node === undefined ? _([]) : tree_node; 
+    }
     return this.data('dom_tree node', node);
   }
   
@@ -3957,6 +4306,135 @@ _.fn.extend({
   ,dragend: function(fn) {
     return this.bind('dragend', fn);
   }
+  
+  ,size_to_fit: function() {
+    return this.attr('size', this.val().length || 1);
+  }
+  
+  ,edit_tag_name: function() {
+    var label = this.tag_label()
+      ,input = _.tag_input;
+    
+    label.after(input.show());
+    input.val(label.text());
+    label.hide();
+    
+    input
+      .size_to_fit()
+      .one('blur', function() {
+        label.html(input.val());
+        _(document.body).append(input.hide());
+        label.show();
+      });
+    
+    setTimeout(function(){input.focus();}, 1);
+    return this;
+  }
+  
+  ,edit_id: function() {
+    var label = this.id_label()
+      ,input = _.id_input;
+    
+    label.after(input.show());
+    input.val(label.text());
+    label.clear().css('display', '');
+    
+    input
+      .size_to_fit()
+      .one('blur', function() {
+        label.html(input.val());
+        _(document.body).append(input.hide());
+      });
+    
+    setTimeout(function(){input.focus();}, 1);
+    return this;
+  } 
+  ,edit_classes: function() {
+    var class_list = this.class_list()
+      ,first_class = class_list.eq(0);
+    
+    if(first_class) return first_class.edit_class();
+    
+    var cls = _('<li>');
+    class_list.append(cls);
+    return this.edit_class(cls);    
+  }
+  
+  ,edit_class: function(label) {
+    var input = _.class_input;
+    
+    label.after(input.show());
+    input.val(label.text());
+    label.clear().css('display', '');
+    
+    input
+      .size_to_fit()
+      .one('blur', function() {
+        label.html(input.val());
+        _(document.body).append(input.hide());
+      });
+    
+    setTimeout(function(){input.focus();}, 1);
+    return this;
+  }
+  
+  ,blur_all: function() {
+    this.find('input').blur();
+    return this;
+  }
+  
+  ,keybindings: function(bindings) {
+    var old = this.data('keybindings') || {};
+    if(bindings) {
+      return this.data('keybindings', _.extend(old, bindings));
+    } 
+    return old;
+  }
+  
+  ,keybind: function(binding, fn) {
+    var bindings = {}
+      ,that = this;
+    bindings[binding] = fn;
+    this.keybindings(bindings);
+    if(!this.data('keybound')) {
+      this.data('keybound', true);
+      this.keydown(function(e){
+        var bindings = that.keybindings()
+          ,binding
+          ,keys
+          ,modified
+          ,matched
+          ,modKeys = 'shift ctrl alt meta'.split(/ /)
+          ,key; 
+        
+        console.log(_.special_keys[e.keyCode])
+        if(e.which) key = String.fromCharCode(e.which);
+        else if(_.special_keys[e.keyCode]) key = _.special_keys[e.keyCode];
+        else if(code == 188) key=","; //If the user presses , when the type is onkeydown
+			  else if(code == 190) key="."; //If the user presses , when the type is onkeydown
+        
+        for(binding in bindings) {
+          modified = true;
+          _(modKeys).each(function() {
+            // false if the modifier is wanted, but it isn't given
+            if(binding.match(this) !== null) modified = e[this+"Key"];
+            //console.log(binding.match(this) !== null, this, binding, modified, e[this+"Key"])
+          });
+          keys = binding.replace(/shift|ctrl|alt|meta/, '').split(/\++/);
+          matched = false;
+          _(keys).each(function() {
+            console.log("THIS:", this, "KEY", key)
+            if(this !== "") matched = (this == key);
+          });
+          if(modified && matched) {
+            bindings[binding](e);
+            e.preventDefault();
+          }
+        }
+      });
+    }
+    return this;
+  }
 });
 
 var viewport = _.viewport.clone()
@@ -3973,6 +4451,37 @@ function clear_all_inspections() {
   iframe.contents().find('body').remove_class_on_all_children(inspection_class);
   viewport.remove_class_on_all_children(inspection_class);
 }
+
+function edit_id() {
+  var node = _.tag_input.parent_node();
+  node.blur_all();
+  node.edit_id();
+}
+
+function edit_classes() {
+  var node = _.id_input.parent_node();
+  node.blur_all();
+  node.edit_classes();
+}
+
+_.tag_input
+  .keyup(function(e) {
+    _.tag_input.size_to_fit();
+  })
+  .keybind('tab', edit_id)
+  .keybind('shift+3', edit_id)
+  .keybind('space', edit_id)
+  .keybind('shift+tab', edit_classes)
+  .keybind('.', edit_classes);
+
+  
+_.id_input
+  .keyup(function(e) {
+    _.id_input.size_to_fit();
+  })
+  .keybind('tab', edit_classes)
+  .keybind('.', edit_classes)
+  .keybind('space', edit_classes);
 
 iframe
   .load(function() {
@@ -4024,6 +4533,8 @@ iframe
     .click(function(e) {
       var el = _(e.target)
         ,node = el.parent_node();
+      // Destroying the inputs not desired.
+      node.blur_all();
       if(el.is('.destroy')) {
         node
           .dom_element()
@@ -4044,4 +4555,14 @@ iframe
           node.collapse_children(true);
       }
     })
+    
+    _(window)
+      .click(function() {this.focus();})
+      .bind('keydown', 'return', function(e) {
+        tree.blur_all();
+        var node = _.tree_node.clone().edit_tag_name();
+        node.id_label().hide_if_empty();
+        tree.append(node);
+      });
+      
 })(jQuery);

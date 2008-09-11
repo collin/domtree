@@ -35,10 +35,10 @@
     width: 16px;
     height: 16px;
     top: 2px; }
-  li.empty > button.toggle {
-    background-image: none; }
   li button.toggle.closed {
     background-image: url(http://localhost:4567/icons/open.png); }
+  li.empty > button.toggle {
+    visibility: hidden; }
   li button.destroy {
     margin-right: 10px;
     opacity: .5; }
@@ -84,8 +84,8 @@
         #viewport ol .element .id {
           color: red;
           margin-left: -.3em; }
-          #viewport ol .element .id:before {
-            content: "#"; }
+        #viewport ol .element .id:before,       #viewport ol .element .id_input:before {
+          content: "#"; }
         #viewport ol .element dl, #viewport ol .element dd, #viewport ol .element dt {
           display: inline;
           margin: 0;
@@ -119,7 +119,7 @@
               font-weight: bold; }
     #viewport #tree_wrap {
       overflow: auto;
-      width: 20%;
+      width: 40%;
       z-index: 100000000000000;
       padding-left: 0px;
       height: 100%;
@@ -130,13 +130,17 @@
         margin-top: 0px;
         margin-left: 0px; }
       #viewport #tree_wrap input {
-        width: 100%;
+        display: inline;
+        position: relative;
+        left: -2px;
+        background-color: white;
+        font-size: inherit;
         border: 1px outset; }
     #viewport iframe {
       border: 1px outset;
       position: absolute;
-      left: 20%;
-      width: 80%;
+      left: 40%;
+      width: 60%;
       height: 100%;
       top: 0px;
       right: 0px; }
