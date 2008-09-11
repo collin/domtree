@@ -23,6 +23,6 @@ module DomTree
     end
   end
   
-  BookmarkletUrl = "#{uri_root}embedded.js"
+  BookmarkletUrl = "#{uri_root}/embedded.js"
 end
 
