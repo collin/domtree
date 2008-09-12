@@ -25,6 +25,10 @@ module DomTree
       :files => DomTree.app/'embedded'/'**'/'*{.js,.html}',
       :update => :build_embedded
 
+    watches :vendor_js,
+      :files => DomTree.vendor/'**'/'*.js',
+      :update => :build_embedded
+
     def build_bookmarklet path
       template = ERB.new(path.read)
         
@@ -40,7 +44,7 @@ module DomTree
       scripts << (vendor/'jquery'/'jquery-1.2.6.js')
       scripts << (vendor/'drag_drop'/'jquery.event.drag-1.0.js')
       scripts << (vendor/'drag_drop'/'jquery.event.drop-1.0.js')
-      scripts << (vendor/'hotkeys'/'jquery.hotkeys-0.7.7.js')
+      scripts << (vendor/'keybinder'/'jquery.keybinder.js')
       
       Pathname.glob(DomTree.app/'embedded'/'**'/'*.html').each do |script|
         flat = script.read
