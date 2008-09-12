@@ -234,6 +234,12 @@ _.fn.extend({
     return this.attr('size', this.val().length || 1);
   }
   
+  ,keyup_size_to_fit: function() {
+    return this.keyup(function(e) {
+      _(this).size_to_fit();
+    });
+  }
+  
   ,edit_tag_name: function() {
     var label = this.tag_label()
       ,input = _.tag_input;
@@ -330,11 +336,11 @@ _.fn.extend({
           ,modKeys = 'shift ctrl alt meta'.split(/ /)
           ,key; 
         
-        console.log(_.special_keys[e.keyCode])
-        if(e.which) key = String.fromCharCode(e.which);
-        else if(_.special_keys[e.keyCode]) key = _.special_keys[e.keyCode];
-        else if(code == 188) key=","; //If the user presses , when the type is onkeydown
-			  else if(code == 190) key="."; //If the user presses , when the type is onkeydown
+        console.log(e.which, e.keyCode, _.special_keys[e.keyCode])
+        if(_.special_keys[e.keyCode]) key = _.special_keys[e.keyCode];        
+        else if(e.which == 188) key=","; //If the user presses , when the type is onkeydown
+			  else if(e.which == 190) key="."; //If the user presses , when the type is onkeydown
+        else if(e.which != 0) key = String.fromCharCode(e.which); 
         
         for(binding in bindings) {
           modified = true;
@@ -349,6 +355,7 @@ _.fn.extend({
             console.log("THIS:", this, "KEY", key)
             if(this !== "") matched = (this == key);
           });
+          console.log('modified', modified, 'matched', matched)
           if(modified && matched) {
             bindings[binding](e);
             e.preventDefault();
@@ -388,9 +395,7 @@ function edit_classes() {
 }
 
 _.tag_input
-  .keyup(function(e) {
-    _.tag_input.size_to_fit();
-  })
+  .keyup_size_to_fit()
   .keybind('tab', edit_id)
   .keybind('shift+3', edit_id)
   .keybind('space', edit_id)
@@ -399,9 +404,7 @@ _.tag_input
 
   
 _.id_input
-  .keyup(function(e) {
-    _.id_input.size_to_fit();
-  })
+  .keyup_size_to_fit()
   .keybind('tab', edit_classes)
   .keybind('.', edit_classes)
   .keybind('space', edit_classes);
