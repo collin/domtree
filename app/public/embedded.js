@@ -3933,6 +3933,10 @@ jQuery.tree_node = jQuery("<li class='tree_node empty'>  <button class='destroy'
 
 jQuery.canvas_stylesheet = jQuery("<style>  .inspected {    outline: 2px red dashed; }    .masked * {    outline: 2px blue dashed;    position: relative;    z-index: 1000; }</style>");
 
+jQuery.attr_input = jQuery("<input class='attr_input' type='text' />");
+
+jQuery.value_input = jQuery("<input class='value_input' type='text' />");
+
 jQuery.tag_input = jQuery("<input type='text' />");
 
 jQuery.id_input = jQuery("<input class='id_input' type='text' />");
@@ -4112,9 +4116,10 @@ _.fn.extend({
     input
       .size_to_fit()
       .one('blur', function() {
-        label.html(input.val());
         _(document.body).append(input.hide());
-        label.show();
+        label
+          .html(input.val() || "div")
+          .show();
       });
     
     setTimeout(function(){input.focus();}, 1);
@@ -4252,7 +4257,6 @@ _.tag_input
   
 _.id_input
   .keyup_size_to_fit()
-  .keybind('tab', edit_classes)
   .keybind('.', edit_classes)
   .keybind('space', edit_classes);
 

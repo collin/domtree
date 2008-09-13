@@ -171,9 +171,10 @@ _.fn.extend({
     input
       .size_to_fit()
       .one('blur', function() {
-        label.html(input.val());
         _(document.body).append(input.hide());
-        label.show();
+        label
+          .html(input.val() || "div")
+          .show();
       });
     
     setTimeout(function(){input.focus();}, 1);
@@ -311,7 +312,6 @@ _.tag_input
   
 _.id_input
   .keyup_size_to_fit()
-  .keybind('tab', edit_classes)
   .keybind('.', edit_classes)
   .keybind('space', edit_classes);
 
