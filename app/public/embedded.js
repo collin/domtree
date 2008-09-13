@@ -3892,9 +3892,9 @@ var drop = $.event.special.drop = {
             ,key; 
           
           if(_.special_keys[e.keyCode]) key = _.special_keys[e.keyCode];        
-          else if(e.which == 188) key=","; //If the user presses , when the type is onkeydown
-			    else if(e.which == 190) key="."; //If the user presses , when the type is onkeydown
-          else if(e.which != 0) key = String.fromCharCode(e.which); 
+          else if(e.keyCode == 188) key=","; //If the user presses , when the type is onkeydown
+			    else if(e.keyCode == 190) key="."; //If the user presses , when the type is onkeydown
+          else if(e.charCode != 0) key = String.fromCharCode(e.charCode); 
           
           for(binding in bindings) {
             modified = true;
@@ -3909,7 +3909,7 @@ var drop = $.event.special.drop = {
               if(this !== "") matched = (this == key);
             });
             if(modified && matched) {
-              bindings[binding](e);
+              bindings[binding].call(this, e);
               e.preventDefault();
             }
           }
@@ -3979,8 +3979,7 @@ _.fn.extend({
   }
   
   ,hide_if_empty: function() {
-    if(this.html() == '') this.hide();
-    return this;
+    return this.if_empty(function(){this.hide();});
   }
   
   ,id: function() {
@@ -4056,8 +4055,9 @@ _.fn.extend({
     return this.html('');
   }
   
-  ,remove_class_on_all_children: function(cls) {
+  ,remove_class_on_all_children_and_self: function(cls) {
     this.find('.'+cls).removeClass(cls);
+    this.removeClass(cls);
     return this;
   }
   
@@ -4122,6 +4122,8 @@ _.fn.extend({
   }
   
   ,edit_id: function() {
+    this.blur_all();
+    
     var label = this.id_label()
       ,input = _.id_input;
     
@@ -4132,40 +4134,67 @@ _.fn.extend({
     input
       .size_to_fit()
       .one('blur', function() {
-        label.html(input.val());
+        label
+          .html(input.val())
+        label.hide_if_empty();
         _(document.body).append(input.hide());
       });
     
     setTimeout(function(){input.focus();}, 1);
     return this;
   } 
+  
+  ,previous_class: function(cls) {
+    var prev = cls.prev('li').prev('li').prev('li');
+    if(prev.length) return this.edit_class(prev);
+    return this.edit_id();
+  }
+  
+  ,next_class: function(cls) {
+    var next = cls.next('li');
+    if(next.length) return this.edit_class(next);
+    return this.new_class();
+  }
+  
   ,edit_classes: function() {
-    console.log('editing classes')
-    var class_list = this.class_list()
-      ,first_class = class_list.find('li:first');
+    var first_class = this.class_list().find('li:first');
     
     if(first_class.length) return this.edit_class(first_class);
     
+    return this.new_class();    
+  }
+  
+  ,new_class: function() {
     var cls = _('<li>');
-    class_list.append(cls);
-    console.log('cls', cls)
-    return this.edit_class(cls);    
+    this.class_list().append(cls);
+    return this.edit_class(cls);
   }
   
   ,edit_class: function(label) {
     var input = _.class_input;
+    this.blur_all();
     label.after(input.show());
+    console.log("WTF")
     input.val(label.text());
     label.clear().css('display', '');
     
     input
       .size_to_fit()
       .one('blur', function() {
-        label.html(input.val());
+        label.html(input.val()).remove_if_empty();
         _(document.body).append(input.hide());
       });
     
     setTimeout(function(){input.focus();}, 1);
+    return this;
+  }
+  
+  ,remove_if_empty: function() {
+    return this.if_empty(function() {this.remove();});
+  }
+  
+  ,if_empty: function(fn) {
+    if(this.html() === "") fn.call(this);
     return this;
   }
   
@@ -4186,20 +4215,30 @@ _('head').append(_.dom_tree_stylesheet);
 _('body').clear().append(viewport);
 
 function clear_all_inspections() {
-  iframe.contents().find('body').remove_class_on_all_children(inspection_class);
-  viewport.remove_class_on_all_children(inspection_class);
+  iframe.contents().find('body').remove_class_on_all_children_and_self(inspection_class);
+  viewport.remove_class_on_all_children_and_self(inspection_class);
 }
 
 function edit_id() {
-  var node = _.tag_input.parent_node();
-  node.blur_all();
-  node.edit_id();
+  _(this).parent_node().edit_id();
 }
 
 function edit_classes() {
-  var node = _.id_input.parent_node();
-  node.blur_all();
-  node.edit_classes();
+  _(this).parent_node().edit_classes();
+}
+
+function new_class() {
+  _(this).parent_node().new_class();
+}
+
+function next_class() {
+  var _this = _(this);
+  _this.parent_node().next_class(_this);
+}
+
+function previous_class() {
+  var _this = _(this);
+  _this.parent_node().previous_class(_this);
 }
 
 _.tag_input
@@ -4217,7 +4256,12 @@ _.id_input
   .keybind('.', edit_classes)
   .keybind('space', edit_classes);
 
-_.id_input.keyup_size_to_fit();
+_.class_input
+  .keyup_size_to_fit()
+  .keybind('tab', next_class)
+  .keybind('.', new_class)
+  .keybind('space', new_class)
+  .keybind('shift+tab', previous_class)
 
 iframe
   .load(function() {
