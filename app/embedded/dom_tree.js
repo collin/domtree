@@ -247,7 +247,6 @@ _.fn.extend({
   } 
   
   ,edit_attrs: function() {
-    return this;
     var first_attr = this.attribute_list().find('dt:first');
     
     if(first_attr.length) return this.edit_attr(first_attr);
@@ -262,15 +261,15 @@ _.fn.extend({
   }
   
   ,previous_attr: function(attr) {
-    var prev = attr.prev('dt');
+    var prev = attr.prev('li').find('dt');
     if(prev.length) return this.edit_attr(prev);
     return this.edit_class(this.last_class());
   }
   
   ,next_attr: function(attr) {
-    var next = attr.next('dt');
+    var next = attr.next('li').find('dt');
     if(next.length) return this.edit_attr(next);
-    return this.new_attr();
+    return this.parent_node().new_attr();
   }
   
   ,edit_attr: function(label) {
@@ -379,12 +378,14 @@ function edit_value() {
 
 function previous_attr() {
   var _this = _(this);
-  _this.parent_node().previous_attr(_this);
+  _this.parent().previous_attr(_this);
 }
 
 function next_attr() {
+  console.log("NEXT ATTR")
   var _this = _(this);
-  _this.parent_node().next_attr(_this);
+  console.log(_this.parent()[0])
+  _this.parent().next_attr(_this);
 }
 
 _.tag_input
