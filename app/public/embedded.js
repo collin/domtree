@@ -3927,7 +3927,7 @@ jQuery.viewporb = jQuery("<div id='viewport'></div>");
 
 jQuery.viewport = jQuery("<div id='viewport'>  <div id='tree_wrap'>    <!-- %input#query{:type=>'text'} -->    <ol id='tree'></ol>  </div>  <iframe></iframe></div>");
 
-jQuery.dom_tree_stylesheet = jQuery("<style>  body {    overflow: hidden;    font-size: 100%; }    body.dragging {      cursor: move !important; }    li.dragging {    position: absolute;    border: 1px outset;    background-color: white !important;    z-index: 10000000000; }  li.inspected> button.toggle {    background-image: url(http://localhost:4567/icons/close.png); }  li.inspected> button.block {    background-color: transparent;    background-image: url(http://localhost:4567/icons/block.png); }  li.inspected> button.destroy {    background-color: transparent;    background-image: url(http://localhost:4567/icons/small_cross.png); }  li.inspected> button.drag {    cursor: move;    background-color: transparent;    background-image: url(http://localhost:4567/icons/drag_handle.gif); }  li button.block, li button.destroy, li button.drag, li button.toggle {    border: none;    display: inline;    position: relative;    top: 4px;    float: left;    width: 12px;    height: 12px;    background: none; }  li button.toggle {    width: 16px;    height: 16px;    top: 2px; }  li button.toggle.closed {    background-image: url(http://localhost:4567/icons/open.png); }  li.empty > button.toggle {    visibility: hidden; }  li button.destroy {    margin-right: 10px;    opacity: .5; }    li button.destroy:hover {      opacity: 1; }  li button.block {    margin-right: 10px; }    li button.block.active {      background-image: url(http://localhost:4567/icons/active_block.png); }    #viewport {    font-size: .7em;    font-family: sans-serif; }    #viewport ol, #viewport ul {      list-style: none; }    #viewport ol {      white-space: nowrap;      background-color: white;      padding: 0; }      #viewport ol .inspected {        background-color: #fcc; }        #viewport ol .inspected li {          background-color: white; }      #viewport ol li {        display: block;        clear: both;        padding-left: 10px;        margin-left: 0px; }      #viewport ol .element {        display: inline;        position: relative;        line-height: 20px; }        #viewport ol .element:before {          content: \"<\";          margin-right: -.3em; }        #viewport ol .element:after {          content: \">\";          margin-left: -.3em; }        #viewport ol .element label, #viewport ol .element .id {          display: inline; }        #viewport ol .element label {          color: blue; }        #viewport ol .element .id {          color: red;          margin-left: -.3em; }        #viewport ol .element .id:before,       #viewport ol .element .id_input:before {          content: \"#\"; }        #viewport ol .element dl, #viewport ol .element dd, #viewport ol .element dt {          display: inline;          margin: 0;          padding: 0; }        #viewport ol .element dt {          color: blue;          margin-left: .3em; }          #viewport ol .element dt:after {            content: \"=\";            color: black; }        #viewport ol .element dd {          color: red; }        #viewport ol .element dd:before, #viewport ol .element dd:after {          content: '\"';          color: black; }        #viewport ol .element .classes {          display: inline;          padding: 0;          margin: 0; }          #viewport ol .element .classes li {            padding: 0;            margin: 0;            background: transparent;            display: inline;            color: green; }            #viewport ol .element .classes li:first-child {              margin-left: -.3em; }            #viewport ol .element .classes li:before {              content: \".\";              color: black;              font-weight: bold; }    #viewport #tree_wrap {      overflow: auto;      width: 40%;      z-index: 100000000000000;      padding-left: 0px;      height: 100%;      position: absolute;      top: 0px;      left: 0px; }      #viewport #tree_wrap #tree {        margin-top: 0px;        margin-left: 0px; }      #viewport #tree_wrap input {        display: inline;        position: relative;        left: -2px;        background-color: white;        font-size: inherit;        border: 1px outset; }    #viewport iframe {      border: 1px outset;      position: absolute;      left: 40%;      width: 60%;      height: 100%;      top: 0px;      right: 0px; }</style>");
+jQuery.dom_tree_stylesheet = jQuery("<style>  body {    overflow: hidden;    font-size: 100%; }    body.dragging {      cursor: move !important; }    li.dragging {    position: absolute;    border: 1px outset;    background-color: white !important;    z-index: 10000000000; }  li.inspected> button.toggle {    background-image: url(http://localhost:4567/icons/close.png); }  li.inspected> button.block {    background-color: transparent;    background-image: url(http://localhost:4567/icons/block.png); }  li.inspected> button.destroy {    background-color: transparent;    background-image: url(http://localhost:4567/icons/small_cross.png); }  li.inspected> button.drag {    cursor: move;    background-color: transparent;    background-image: url(http://localhost:4567/icons/drag_handle.gif); }  li button.block, li button.destroy, li button.drag, li button.toggle {    border: none;    display: inline;    position: relative;    top: 4px;    float: left;    width: 12px;    height: 12px;    background: none; }  li button.toggle {    width: 16px;    height: 16px;    top: 2px; }  li button.toggle.closed {    background-image: url(http://localhost:4567/icons/open.png); }  li.empty > button.toggle {    visibility: hidden; }  li button.destroy {    margin-right: 10px;    opacity: .5; }    li button.destroy:hover {      opacity: 1; }  li button.block {    margin-right: 10px; }    li button.block.active {      background-image: url(http://localhost:4567/icons/active_block.png); }    #viewport {    font-size: .7em;    font-family: sans-serif; }    #viewport ol, #viewport ul {      list-style: none; }    #viewport ol {      white-space: nowrap;      background-color: white;      padding: 0; }      #viewport ol .inspected {        background-color: #fcc; }        #viewport ol .inspected .tree_node {          background-color: white; }      #viewport ol li {        display: block;        clear: both;        padding-left: 10px;        margin-left: 0px; }      #viewport ol .element {        display: inline;        position: relative;        line-height: 20px; }        #viewport ol .element:before {          content: \"<\";          margin-right: -.3em; }        #viewport ol .element:after {          content: \">\";          margin-left: -.3em; }        #viewport ol .element label, #viewport ol .element .id {          display: inline; }        #viewport ol .element label {          color: blue; }        #viewport ol .element .id {          color: red;          margin-left: -.3em; }        #viewport ol .element .id:before,       #viewport ol .element .id_input:before {          content: \"#\"; }        #viewport ol .element dl, #viewport ol .element dd, #viewport ol .element dt {          display: inline;          margin: 0;          padding: 0; }          #viewport ol .element dl> li,         #viewport ol .element dd> li,         #viewport ol .element dt> li {            margin: 0;            padding: 0;            display: inline; }        #viewport ol .element dt {          color: blue;          margin-left: .3em; }          #viewport ol .element dt:after {            content: \"=\";            color: black; }        #viewport ol .element dd {          color: red; }        #viewport ol .element dd:before, #viewport ol .element dd:after {          content: '\"';          color: black; }        #viewport ol .element .classes {          display: inline;          padding: 0;          margin: 0; }          #viewport ol .element .classes li {            padding: 0;            margin: 0;            background: transparent;            display: inline;            color: green; }            #viewport ol .element .classes li:first-child {              margin-left: -.3em; }            #viewport ol .element .classes li:before {              content: \".\";              color: black;              font-weight: bold; }    #viewport #tree_wrap {      overflow: auto;      width: 40%;      z-index: 100000000000000;      padding-left: 0px;      height: 100%;      position: absolute;      top: 0px;      left: 0px; }      #viewport #tree_wrap #tree {        margin-top: 0px;        margin-left: 0px; }      #viewport #tree_wrap input {        display: inline;        position: relative;        left: -2px;        background-color: white;        font-size: inherit;        border: 1px outset; }    #viewport iframe {      border: 1px outset;      position: absolute;      left: 40%;      width: 60%;      height: 100%;      top: 0px;      right: 0px; }</style>");
 
 jQuery.tree_node = jQuery("<li class='tree_node empty'>  <button class='destroy'></button>  <button class='block'></button>  <!-- %button.drag -->  <button class='toggle'></button>  <div class='element'>    <label></label>    <div class='id'></div>    <ul class='classes'></ul>    <dl></dl>  </div>  <ol></ol></li>");
 
@@ -4019,7 +4019,7 @@ _.fn.extend({
   ,attributes_to_dom: function() {
     var dom_string = _(this[0].attributes).map(function(which, attr) {
       if(!this.name.match(/id|class/)) {
-        return '<dt>'+attr.name+'</dt><dd>'+attr.value+'</dd>';
+        return '<li><dt>'+attr.name+'</dt><dd>'+attr.value+'</dd></li>';
       }
     }).join('');
     
@@ -4158,12 +4158,11 @@ _.fn.extend({
   ,next_class: function(cls) {
     var next = cls.next('li');
     if(next.length) return this.edit_class(next);
-    return this.new_class();
+    return this.edit_attrs();
   }
   
   ,edit_classes: function() {
     var first_class = this.class_list().find('li:first');
-    
     if(first_class.length) return this.edit_class(first_class);
     
     return this.new_class();    
@@ -4179,7 +4178,6 @@ _.fn.extend({
     var input = _.class_input;
     this.blur_all();
     label.after(input.show());
-    console.log("WTF")
     input.val(label.text());
     label.clear().css('display', '');
     
@@ -4187,6 +4185,70 @@ _.fn.extend({
       .size_to_fit()
       .one('blur', function() {
         label.html(input.val()).remove_if_empty();
+        _(document.body).append(input.hide());
+      });
+    
+    setTimeout(function(){input.focus();}, 1);
+  } 
+  
+  ,edit_attrs: function() {
+    return this;
+    var first_attr = this.attribute_list().find('dt:first');
+    
+    if(first_attr.length) return this.edit_attr(first_attr);
+    
+    return this.new_attr();    
+  }
+  
+  ,new_attr: function() {
+    var attr = _('<li><dt><dd></li>');
+    this.attribute_list().append(attr);
+    return this.edit_attr(attr);
+  }
+  
+  ,previous_attr: function(attr) {
+    var prev = attr.prev('dt');
+    if(prev.length) return this.edit_attr(prev);
+    return this.edit_class(this.last_class());
+  }
+  
+  ,next_attr: function(attr) {
+    var next = attr.next('dt');
+    if(next.length) return this.edit_attr(next);
+    return this.new_attr();
+  }
+  
+  ,edit_attr: function(label) {
+    label = label.find('dt');
+    var input = _.attr_input;
+    this.blur_all();
+    label.before(input.show()); // placement before an outlyer
+    input.val(label.text());
+    label.clear().css('display', '');
+    
+    input
+      .size_to_fit()
+      .one('blur', function() {
+        _(document.body).append(input.hide());
+        label.html(input.val()).if_empty(function() {this.parent().remove()});
+      });
+    
+    setTimeout(function(){input.focus();}, 1);
+    return this;
+  }
+  
+  ,edit_value: function(label) {
+    label = label.find('dd');
+    var input = _.value_input;
+    this.blur_all();
+    input.val(label.text());     // we're setting the text FIRST
+    label.clear();              // and we DONT hide the label BECAUSE:
+    label.append(input.css('display', '')); // placement inside an outlyer
+    
+    input
+      .size_to_fit()
+      .one('blur', function() {
+        label.html(input.val());
         _(document.body).append(input.hide());
       });
     
@@ -4206,6 +4268,10 @@ _.fn.extend({
   ,blur_all: function() {
     this.find('input').blur();
     return this;
+  }
+  
+  ,last_class: function() {
+    return this.class_list().find('li:last');
   }
 });
 
@@ -4246,6 +4312,26 @@ function previous_class() {
   _this.parent_node().previous_class(_this);
 }
 
+function edit_attr() {
+  var _this = _(this);
+  _this.parent_node().edit_attr(_this.parent());
+}
+
+function edit_value() {
+  var _this = _(this);
+  _this.parent_node().edit_value(_this.parent());
+}
+
+function previous_attr() {
+  var _this = _(this);
+  _this.parent_node().previous_attr(_this);
+}
+
+function next_attr() {
+  var _this = _(this);
+  _this.parent_node().next_attr(_this);
+}
+
 _.tag_input
   .keyup_size_to_fit()
   .keybind('tab', edit_id)
@@ -4258,6 +4344,7 @@ _.tag_input
 _.id_input
   .keyup_size_to_fit()
   .keybind('.', edit_classes)
+  .keybind('tab', edit_classes)
   .keybind('space', edit_classes);
 
 _.class_input
@@ -4266,6 +4353,18 @@ _.class_input
   .keybind('.', new_class)
   .keybind('space', new_class)
   .keybind('shift+tab', previous_class)
+
+_.attr_input
+  .keybind('=', edit_value)
+  .keybind('tab', edit_value)
+  .keybind('space', edit_value)
+  .keybind('shift+tab', previous_attr)
+  .keyup_size_to_fit();
+  
+_.value_input
+  .keybind('tab', next_attr)
+  .keybind('shift+tab', edit_attr)
+  .keyup_size_to_fit();
 
 iframe
   .load(function() {
@@ -4349,4 +4448,4 @@ iframe
         tree.append(node);
       });
       
-})(jQuery);
+})(jQuery)

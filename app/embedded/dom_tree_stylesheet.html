@@ -60,7 +60,7 @@
       padding: 0; }
       #viewport ol .inspected {
         background-color: #fcc; }
-        #viewport ol .inspected li {
+        #viewport ol .inspected .tree_node {
           background-color: white; }
       #viewport ol li {
         display: block;
@@ -90,6 +90,10 @@
           display: inline;
           margin: 0;
           padding: 0; }
+          #viewport ol .element dl> li,         #viewport ol .element dd> li,         #viewport ol .element dt> li {
+            margin: 0;
+            padding: 0;
+            display: inline; }
         #viewport ol .element dt {
           color: blue;
           margin-left: .3em; }

@@ -4,7 +4,7 @@ require './lib/dom_tree'
 require 'continuous_builder'
 require 'haml'
 require 'sass'
-require 'jabs'
+#require 'jabs'
 require 'erb'
 
 module DomTree
@@ -62,9 +62,9 @@ module DomTree
         scripts << script
       end
       
-      f = (DomTree.app/'public'/'embedded.js').open 'w+'
-      f.write scripts.map(&:read).join("\n\n")
-      f.close
+      f = File.open(DomTree.app/'public'/'embedded.js', 'w+')
+      f.write scripts.map{|script| script.read}.join("\n\n")
+      f.close()
     end
   end
 end

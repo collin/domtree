@@ -81,7 +81,7 @@
         :padding 0
         .inspected
           :background-color #fcc
-          li
+          .tree_node
             :background-color white
         li
           :display block
@@ -112,6 +112,10 @@
             :display inline
             :margin 0
             :padding 0
+            &> li 
+              :margin 0
+              :padding 0
+              :display inline
           dt
             :color blue
             :margin-left .3em

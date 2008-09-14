@@ -74,7 +74,7 @@ _.fn.extend({
   ,attributes_to_dom: function() {
     var dom_string = _(this[0].attributes).map(function(which, attr) {
       if(!this.name.match(/id|class/)) {
-        return '<dt>'+attr.name+'</dt><dd>'+attr.value+'</dd>';
+        return '<li><dt>'+attr.name+'</dt><dd>'+attr.value+'</dd></li>';
       }
     }).join('');
     
@@ -213,12 +213,11 @@ _.fn.extend({
   ,next_class: function(cls) {
     var next = cls.next('li');
     if(next.length) return this.edit_class(next);
-    return this.new_class();
+    return this.edit_attrs();
   }
   
   ,edit_classes: function() {
     var first_class = this.class_list().find('li:first');
-    
     if(first_class.length) return this.edit_class(first_class);
     
     return this.new_class();    
@@ -234,7 +233,6 @@ _.fn.extend({
     var input = _.class_input;
     this.blur_all();
     label.after(input.show());
-    console.log("WTF")
     input.val(label.text());
     label.clear().css('display', '');
     
@@ -242,6 +240,70 @@ _.fn.extend({
       .size_to_fit()
       .one('blur', function() {
         label.html(input.val()).remove_if_empty();
+        _(document.body).append(input.hide());
+      });
+    
+    setTimeout(function(){input.focus();}, 1);
+  } 
+  
+  ,edit_attrs: function() {
+    return this;
+    var first_attr = this.attribute_list().find('dt:first');
+    
+    if(first_attr.length) return this.edit_attr(first_attr);
+    
+    return this.new_attr();    
+  }
+  
+  ,new_attr: function() {
+    var attr = _('<li><dt><dd></li>');
+    this.attribute_list().append(attr);
+    return this.edit_attr(attr);
+  }
+  
+  ,previous_attr: function(attr) {
+    var prev = attr.prev('dt');
+    if(prev.length) return this.edit_attr(prev);
+    return this.edit_class(this.last_class());
+  }
+  
+  ,next_attr: function(attr) {
+    var next = attr.next('dt');
+    if(next.length) return this.edit_attr(next);
+    return this.new_attr();
+  }
+  
+  ,edit_attr: function(label) {
+    label = label.find('dt');
+    var input = _.attr_input;
+    this.blur_all();
+    label.before(input.show()); // placement before an outlyer
+    input.val(label.text());
+    label.clear().css('display', '');
+    
+    input
+      .size_to_fit()
+      .one('blur', function() {
+        _(document.body).append(input.hide());
+        label.html(input.val()).if_empty(function() {this.parent().remove()});
+      });
+    
+    setTimeout(function(){input.focus();}, 1);
+    return this;
+  }
+  
+  ,edit_value: function(label) {
+    label = label.find('dd');
+    var input = _.value_input;
+    this.blur_all();
+    input.val(label.text());     // we're setting the text FIRST
+    label.clear();              // and we DONT hide the label BECAUSE:
+    label.append(input.css('display', '')); // placement inside an outlyer
+    
+    input
+      .size_to_fit()
+      .one('blur', function() {
+        label.html(input.val());
         _(document.body).append(input.hide());
       });
     
@@ -261,6 +323,10 @@ _.fn.extend({
   ,blur_all: function() {
     this.find('input').blur();
     return this;
+  }
+  
+  ,last_class: function() {
+    return this.class_list().find('li:last');
   }
 });
 
@@ -301,6 +367,26 @@ function previous_class() {
   _this.parent_node().previous_class(_this);
 }
 
+function edit_attr() {
+  var _this = _(this);
+  _this.parent_node().edit_attr(_this.parent());
+}
+
+function edit_value() {
+  var _this = _(this);
+  _this.parent_node().edit_value(_this.parent());
+}
+
+function previous_attr() {
+  var _this = _(this);
+  _this.parent_node().previous_attr(_this);
+}
+
+function next_attr() {
+  var _this = _(this);
+  _this.parent_node().next_attr(_this);
+}
+
 _.tag_input
   .keyup_size_to_fit()
   .keybind('tab', edit_id)
@@ -313,6 +399,7 @@ _.tag_input
 _.id_input
   .keyup_size_to_fit()
   .keybind('.', edit_classes)
+  .keybind('tab', edit_classes)
   .keybind('space', edit_classes);
 
 _.class_input
@@ -321,6 +408,18 @@ _.class_input
   .keybind('.', new_class)
   .keybind('space', new_class)
   .keybind('shift+tab', previous_class)
+
+_.attr_input
+  .keybind('=', edit_value)
+  .keybind('tab', edit_value)
+  .keybind('space', edit_value)
+  .keybind('shift+tab', previous_attr)
+  .keyup_size_to_fit();
+  
+_.value_input
+  .keybind('tab', next_attr)
+  .keybind('shift+tab', edit_attr)
+  .keyup_size_to_fit();
 
 iframe
   .load(function() {
@@ -404,4 +503,4 @@ iframe
         tree.append(node);
       });
       
-})(jQuery);
+})(jQuery)
