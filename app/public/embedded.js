@@ -4969,11 +4969,33 @@ _.attr_input
   .keybind('tab', edit_value)
   .keybind('space', edit_value)
   .keybind('shift+tab', previous_attr)
+  .focus(function() {
+      var _this = _(this);
+      _this.parents('li:first').data('old value', _this.val());  
+    })
+  .blur(function() {
+      var _this = _(this)
+        ,el = _this.parent_node().dom_element()
+        ,val = _this.val()
+        ,attr_dom = _this.parents('li:first')
+        ,old_val = attr_dom.data('old value'); 
+      
+      if(old_val && (val !== old_val)) el.removeAttr(old_val);
+      if(val) el.attr(val, attr_dom.find('dd').text());
+    })
   .keyup_size_to_fit();
   
 _.value_input
   .keybind('tab', next_attr)
   .keybind('shift+tab', edit_attr)
+  .blur(function() {
+      var _this = _(this)
+        ,el = _this.parent_node().dom_element()
+        ,val = _this.val()
+        ,attr_dom = _this.parents('li:first'); 
+      
+      if(val) el.attr(attr_dom.find('dt').text(), val);
+    })
   .keyup_size_to_fit();
 
 iframe
