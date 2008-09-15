@@ -1,4 +1,7 @@
 ;(function(_) {
+
+_.elements = "A,ABBR,ACRONYM,ADDRESS,APPLET,AREA,B,BASE, BASEFONT,BDO,BIG,BLOCKQUOTE,BODY,BR,BUTTON,CAPTION,CENTER,CITE,CODE,COL, COLGROUP,DD,DEL,DFN,DIR,DIV,DL,DT,EM, FIELDSET,FONT,FORM,FRAME, FRAMESET,H1,H2,H3,H4,H5,H6,HEAD,HR,HTML,I,IFRAME,IMG,INPUT,INS,ISINDEX,KBD,LABEL,LEGEND,LI,LINK,MAP,MENU,META, NOFRAMES, NOSCRIPT,OBJECT,OL, OPTGROUP,OPTION,P,PARAM,PRE,Q,S,SAMP,SCRIPT,SELECT,SMALL,SPAN,STRIKE,STRONG,STYLE,SUB,SUP,TABLE,TBODY,TD, TEXTAREA,TFOOT,TH,THEAD,TITLE,TR,TT,U,UL,VAR".toLowerCase().split(',')
+
 _.fn.extend({
   'join': function() {
     return [].join.apply(this, arguments);
@@ -176,14 +179,15 @@ _.fn.extend({
     var label = opts.label
       ,input = opts.input;
       
-    this.blur_all();
+
+    _(document.body).blur_all();
     input.val(label.text());
     
     if(opts.do_not_hide_label) label.clear().css('display', '');
     else label.hide();
     
     label[opts.insertion_method || 'after'](input.show());
-    
+   
     input
       .size_to_fit()
       .one('blur', function() {
@@ -196,7 +200,7 @@ _.fn.extend({
         else if(opts.hide_if_empty) {      
           label
             .html(input.val())
-          label.hide_if_empty();
+            .hide_if_empty();
         }
         else if(opts.remove_if_empty) {
           label
@@ -212,6 +216,8 @@ _.fn.extend({
           label.html(input.val());
         }
       });
+    
+    label.parent().length && opts.success && opts.success.call(label);
     
     setTimeout(function(){input.focus();}, 1);
     return this;
@@ -348,6 +354,9 @@ function clear_all_inspections() {
   viewport.remove_class_on_all_children_and_self(inspection_class);
 }
 
+function edit_tag_name() {
+  _(this).parent_node().edit_tag_name();
+}
 function edit_id() {
   _(this).parent_node().edit_id();
 }
@@ -396,11 +405,21 @@ _.tag_input
   .keybind('shift+3', edit_id)
   .keybind('space', edit_id)
   .keybind('shift+tab', edit_classes)
-  .keybind('.', edit_classes);
+  .keybind('.', edit_classes)
+  .autocompleteArray(_.elements, {
+      autoFill: true
+      ,delay: 0
+      ,mustMatch: true
+      ,selectFirst: true
+      ,onAutofill: function(input) {
+        input.size_to_fit();
+      }
+    });
 
 _.id_input
   .keyup_size_to_fit()
   .keybind('.', edit_classes)
+  .keybind('shift+tab', edit_tag_name)
   .keybind('tab', edit_classes)
   .keybind('space', edit_classes);
 
@@ -409,7 +428,7 @@ _.class_input
   .keybind('tab', next_class)
   .keybind('.', new_class)
   .keybind('space', new_class)
-  .keybind('shift+tab', previous_class)
+  .keybind('shift+tab', previous_class);
 
 _.attr_input
   .keybind('=', edit_value)
@@ -417,15 +436,11 @@ _.attr_input
   .keybind('space', edit_value)
   .keybind('shift+tab', previous_attr)
   .keyup_size_to_fit();
-
-function prep_value_input() {  
-  _.value_input
-    .keybind('tab', next_attr)
-    .keybind('shift+tab', edit_attr)
-    .keyup_size_to_fit();
-}
-
-prep_value_input();
+  
+_.value_input
+  .keybind('tab', next_attr)
+  .keybind('shift+tab', edit_attr)
+  .keyup_size_to_fit();
 
 iframe
   .load(function() {
@@ -498,6 +513,11 @@ iframe
         else
           node.collapse_children(true);
       }
+      el.is('label') && node.edit_tag_name();
+      el.is('.id') && node.edit_id();
+      el.parent().is('.classes') && node.edit_class(el);
+      el.is('dt') && node.edit_attr(el.parent());
+      el.is('dd') && node.edit_value(el.parent());
     })
     
     _(window)

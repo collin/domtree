@@ -45,6 +45,7 @@ module DomTree
       scripts << (vendor/'drag_drop'/'jquery.event.drag-1.0.js')
       scripts << (vendor/'drag_drop'/'jquery.event.drop-1.0.js')
       scripts << (vendor/'keybinder'/'jquery.keybinder.js')
+      scripts << (vendor/'autocomplete'/'jquery.autocomplete.js')
       
       Pathname.glob(DomTree.app/'embedded'/'**'/'*.html').each do |script|
         flat = script.read
