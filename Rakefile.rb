@@ -11,3 +11,13 @@ task :cleanup do
     puts "no dirty~ files".bold
   end
 end
+
+namespace :git do
+  task :submodule do
+    system "git submodule init"
+    system "git submodule update"
+    system "cd vendor/sinatra"
+    system "git submodule init"
+    system "git submodule update"
+  end
+end
