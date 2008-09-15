@@ -4114,49 +4114,76 @@ _.fn.extend({
       _(this).size_to_fit();
     });
   }
-  
-  ,edit_tag_name: function() {
-    var label = this.tag_label()
-      ,input = _.tag_input;
-    
-    label.after(input.show());
+
+/*
+  label: the jqueried label
+  input: the jqueried input elment
+
+  insertion_method: method to insert the input: 'append', 'before', etc.
+    defaults to 'after'
+  do_not_hide_label: keep the label around so it's css will apply
+  default_value: set the label to this if the value is ""
+  hide_if_empty: hide the label if the value is ""
+  remove_if_empty: remove the label if the value is ""
+*/
+
+  ,edit_label: function(opts) {
+    var label = opts.label
+      ,input = opts.input;
+      
+    this.blur_all();
     input.val(label.text());
-    label.hide();
+    
+    if(opts.do_not_hide_label) label.clear().css('display', '');
+    else label.hide();
+    
+    label[opts.insertion_method || 'after'](input.show());
     
     input
       .size_to_fit()
       .one('blur', function() {
         _(document.body).append(input.hide());
-        label
-          .html(input.val() || "div")
-          .show();
+        if(opts.default_value) {
+          label
+            .html(input.val() || opts.default_value)
+            .show();
+        }
+        else if(opts.hide_if_empty) {      
+          label
+            .html(input.val())
+          label.hide_if_empty();
+        }
+        else if(opts.remove_if_empty) {
+          label
+            .html(input.val())
+            .remove_if_empty();
+        }
+        else if(opts.if_empty) {
+          label
+            .html(input.val())
+            .if_empty(opts.if_empty);
+        }
       });
     
     setTimeout(function(){input.focus();}, 1);
     return this;
   }
   
+  ,edit_tag_name: function() {
+    return this.edit_label({
+      label: this.tag_label()
+      ,input: _.tag_input
+      ,default_value: 'div'
+    });
+  }
+  
   ,edit_id: function() {
-    this.blur_all();
-    
-    var label = this.id_label()
-      ,input = _.id_input;
-    
-    label.after(input.show());
-    input.val(label.text());
-    label.clear().css('display', '');
-    
-    input
-      .size_to_fit()
-      .one('blur', function() {
-        label
-          .html(input.val())
-        label.hide_if_empty();
-        _(document.body).append(input.hide());
-      });
-    
-    setTimeout(function(){input.focus();}, 1);
-    return this;
+    return this.edit_label({
+      label: this.id_label()
+      ,input: _.id_input
+      ,hide_if_empty: true
+      ,do_not_hide_label: true
+    });
   } 
   
   ,previous_class: function(cls) {
@@ -4185,20 +4212,12 @@ _.fn.extend({
   }
   
   ,edit_class: function(label) {
-    var input = _.class_input;
-    this.blur_all();
-    label.after(input.show());
-    input.val(label.text());
-    label.clear().css('display', '');
-    
-    input
-      .size_to_fit()
-      .one('blur', function() {
-        label.html(input.val()).remove_if_empty();
-        _(document.body).append(input.hide());
-      });
-    
-    setTimeout(function(){input.focus();}, 1);
+    return this.edit_label({
+      label: label
+      ,input: _.class_input
+      ,remove_if_empty: true
+      ,do_not_hide_label: true
+    }); 
   } 
   
   ,edit_attrs: function() {
@@ -4229,42 +4248,22 @@ _.fn.extend({
   }
   
   ,edit_attr: function(label) {
-    label = label.find('dt');
-    var input = _.attr_input;
-    this.blur_all();
-    label.before(input.show()); // placement before an outlyer
-    input.val(label.text());
-    label.clear().css('display', '');
-    
-    input
-      .size_to_fit()
-      .one('blur', function() {
-        _(document.body).append(input.hide());
-        label.html(input.val()).if_empty(function() {this.parent().remove()});
-      });
-    
-    setTimeout(function(){input.focus();}, 1);
-    return this;
+    return this.edit_label({
+      label: label.find('dt')
+      ,input: _.attr_input
+      ,insertion_method: 'before'
+      ,if_empty: function() {this.parent().remove()}
+      ,do_not_hide_label: true
+    });
   }
   
   ,edit_value: function(label) {
-    label = label.find('dd');
-    var input = _.value_input;
-    this.blur_all();
-    input.val(label.text());     // we're setting the text FIRST
-    label.clear();              // and we DONT hide the label BECAUSE:
-    label.append(input.css('display', '')); // placement inside an outlyer
-    
-    input
-      .size_to_fit()
-      .one('blur', function() {
-        label.html(input.val());
-        _(document.body).append(input.hide());
-        prep_value_input()
-      });
-    
-    setTimeout(function(){input.focus();}, 1);
-    return this;
+    return this.edit_label({
+      label: label.find('dd')
+      ,input: _.value_input
+      ,insertion_method: 'append'
+      ,do_not_hide_label: true
+    });
   }
   
   ,remove_if_empty: function() {
