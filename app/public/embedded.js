@@ -3889,7 +3889,9 @@ var drop = $.event.special.drop = {
             ,modified
             ,matched
             ,modKeys = 'shift ctrl alt meta'.split(/ /)
-            ,key; 
+            ,key
+            ,requested_presses
+            ,presses; 
           
           if(_.special_keys[e.keyCode]) key = _.special_keys[e.keyCode];        
           else if(e.keyCode == 188) key=","; //If the user presses , when the type is onkeydown
@@ -3897,20 +3899,28 @@ var drop = $.event.special.drop = {
           else if(e.charCode != 0) key = String.fromCharCode(e.charCode); 
           
           for(binding in bindings) {
+            presses = 0;
+            requested_presses = binding.split('+').length;
             modified = true;
             _(modKeys).each(function() {
               // false if the modifier is wanted, but it isn't given
               if(binding.match(this) !== null) modified = e[this+"Key"];
+              if(e[this+"Key"]) presses++;
               //console.log(binding.match(this) !== null, this, binding, modified, e[this+"Key"])
             });
             keys = binding.replace(/shift|ctrl|alt|meta/, '').split(/\++/);
             matched = false;
             _(keys).each(function() {
-              if(this !== "") matched = (this == key);
+              if(this !== "") 
+                if(this == key) {
+                  matched = true;
+                  presses++;
+                }
             });
-            if(modified && matched) {
+            if(modified && matched && presses === requested_presses) {
               bindings[binding].call(this, e);
               e.preventDefault();
+              break;
             }
           }
         });
@@ -4192,7 +4202,7 @@ _.fn.extend({
   } 
   
   ,edit_attrs: function() {
-    var first_attr = this.attribute_list().find('dt:first');
+    var first_attr = this.attribute_list().find('li:first');
     
     if(first_attr.length) return this.edit_attr(first_attr);
     
@@ -4206,13 +4216,14 @@ _.fn.extend({
   }
   
   ,previous_attr: function(attr) {
-    var prev = attr.prev('li').find('dt');
-    if(prev.length) return this.edit_attr(prev);
-    return this.edit_class(this.last_class());
+    var prev = attr.prev('li');
+    if(prev.length) return this.edit_value(prev);
+    var last_class = this.last_class();
+    return last_class.length ? this.edit_class(this.last_class()) : this.new_class();
   }
   
   ,next_attr: function(attr) {
-    var next = attr.next('li').find('dt');
+    var next = attr.next('li');
     if(next.length) return this.edit_attr(next);
     return this.parent_node().new_attr();
   }
@@ -4249,6 +4260,7 @@ _.fn.extend({
       .one('blur', function() {
         label.html(input.val());
         _(document.body).append(input.hide());
+        prep_value_input()
       });
     
     setTimeout(function(){input.focus();}, 1);
@@ -4313,7 +4325,7 @@ function previous_class() {
 
 function edit_attr() {
   var _this = _(this);
-  _this.parent_node().edit_attr(_this.parent());
+  _this.parent_node().edit_attr(_this.parents('li:first'));
 }
 
 function edit_value() {
@@ -4323,13 +4335,11 @@ function edit_value() {
 
 function previous_attr() {
   var _this = _(this);
-  _this.parent().previous_attr(_this);
+  _this.parent_node().previous_attr(_this.parents('li:first'));
 }
 
 function next_attr() {
-  console.log("NEXT ATTR")
   var _this = _(this);
-  console.log(_this.parent()[0])
   _this.parent().next_attr(_this);
 }
 
@@ -4361,11 +4371,15 @@ _.attr_input
   .keybind('space', edit_value)
   .keybind('shift+tab', previous_attr)
   .keyup_size_to_fit();
-  
-_.value_input
-  .keybind('tab', next_attr)
-  .keybind('shift+tab', edit_attr)
-  .keyup_size_to_fit();
+
+function prep_value_input() {  
+  _.value_input
+    .keybind('tab', next_attr)
+    .keybind('shift+tab', edit_attr)
+    .keyup_size_to_fit();
+}
+
+prep_value_input();
 
 iframe
   .load(function() {
