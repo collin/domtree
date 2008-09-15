@@ -4448,7 +4448,7 @@ jQuery.jstree_stylesheet = jQuery("<style>    .rtl * {  	direction:rtl;  }  .rtl
 
 jQuery.viewporb = jQuery("<div id='viewport'></div>");
 
-jQuery.viewport = jQuery("<div id='viewport'>  <div id='tree_wrap'>    <!-- %input#query{:type=>'text'} -->    <ol id='tree'></ol>  </div>  <iframe></iframe></div>");
+jQuery.viewport = jQuery("<div id='viewport'>  <div id='tree_wrap'>    <!-- %input#query{:type=>'text'} -->    <ol class='tree_node' id='tree'></ol>  </div>  <iframe></iframe></div>");
 
 jQuery.dom_tree_stylesheet = jQuery("<style>  input::-moz-selection {    background: #FF3C00 !important;    color: #FFF !important; }    body {    overflow: hidden;    font-size: 100%; }    body.dragging {      cursor: move !important; }    li.dragging {    position: absolute;    border: 1px outset;    background-color: white !important;    z-index: 10000000000; }  li.inspected> button.toggle {    background-image: url(http://localhost:4567/icons/close.png); }  li.inspected> button.block {    background-color: transparent;    background-image: url(http://localhost:4567/icons/block.png); }  li.inspected> button.destroy {    background-color: transparent;    background-image: url(http://localhost:4567/icons/small_cross.png); }  li.inspected> button.drag {    cursor: move;    background-color: transparent;    background-image: url(http://localhost:4567/icons/drag_handle.gif); }  li button.block, li button.destroy, li button.drag, li button.toggle {    border: none;    display: inline;    position: relative;    top: 4px;    float: left;    width: 12px;    height: 12px;    background: none; }  li button.toggle {    width: 16px;    height: 16px;    top: 2px; }  li button.toggle.closed {    background-image: url(http://localhost:4567/icons/open.png); }  li.empty > button.toggle {    visibility: hidden; }  li button.destroy {    margin-right: 10px;    opacity: .5; }    li button.destroy:hover {      opacity: 1; }  li button.block {    margin-right: 10px; }    li button.block.active {      background-image: url(http://localhost:4567/icons/active_block.png); }    #viewport {    font-size: .7em;    font-family: sans-serif; }    #viewport ol, #viewport ul {      list-style: none; }    #viewport ol {      white-space: nowrap;      background-color: white;      padding: 0; }      #viewport ol .inspected {        background-color: #fcc; }        #viewport ol .inspected .tree_node {          background-color: white; }      #viewport ol li {        display: block;        clear: both;        padding-left: 10px;        margin-left: 0px; }      #viewport ol .element {        display: inline;        position: relative;        line-height: 20px; }        #viewport ol .element:before {          content: \"<\";          margin-right: -.3em; }        #viewport ol .element:after {          content: \">\";          margin-left: -.3em; }        #viewport ol .element label, #viewport ol .element .id {          display: inline; }        #viewport ol .element label {          color: blue; }        #viewport ol .element .id {          color: red;          margin-left: -.3em; }        #viewport ol .element .id:before,       #viewport ol .element .id_input:before {          content: \"#\"; }        #viewport ol .element dl, #viewport ol .element dd, #viewport ol .element dt {          display: inline;          margin: 0;          padding: 0; }          #viewport ol .element dl> li,         #viewport ol .element dd> li,         #viewport ol .element dt> li {            margin: 0;            padding: 0;            display: inline; }        #viewport ol .element dt {          color: blue;          margin-left: .3em; }          #viewport ol .element dt:after {            content: \"=\";            color: black; }        #viewport ol .element dd {          color: red; }        #viewport ol .element dd:before, #viewport ol .element dd:after {          content: '\"';          color: black; }        #viewport ol .element .classes {          display: inline;          padding: 0;          margin: 0; }          #viewport ol .element .classes li {            padding: 0;            margin: 0;            background: transparent;            display: inline;            color: green; }            #viewport ol .element .classes li:first-child {              margin-left: -.3em; }            #viewport ol .element .classes li:before {              content: \".\";              color: black;              font-weight: bold; }    #viewport #tree_wrap {      overflow: auto;      width: 40%;      z-index: 100000000000000;      padding-left: 0px;      height: 100%;      position: absolute;      top: 0px;      left: 0px; }      #viewport #tree_wrap #tree {        margin-top: 0px;        margin-left: 0px; }      #viewport #tree_wrap input {        display: inline;        position: relative;        left: -2px;        background-color: white;        font-size: inherit;        border: 1px outset; }    #viewport iframe {      border: 1px outset;      position: absolute;      left: 40%;      width: 60%;      height: 100%;      top: 0px;      right: 0px; }</style>");
 
@@ -4526,6 +4526,15 @@ _.fn.extend({
   
   ,class_list: function() {
     return this.find('.classes:first');
+  }
+  
+  ,class_string: function() {
+    var classes = this.class_list().children().map(function() {
+      var _this = _(this);
+      if(_this.is('input')) return _this.val(); 
+      return _this.text();    
+    });
+    return classes.join(' ');
   }
   
   ,attribute_list: function() {
@@ -4824,6 +4833,17 @@ _.fn.extend({
       .remove();
     return usurper;
   }
+  
+  ,create_dom_element: function(tag_name) {
+    new_el = _.create_element(tag_name)
+      .text("OMG YOU HAVE A NEW ELEMENT!")
+      .tree_node(this);
+      
+    this.dom_element(new_el)
+      .parent_node()
+      .dom_element()
+        .append(new_el);  
+  }
 });
 
 var viewport = _.viewport.clone()
@@ -4901,10 +4921,7 @@ _.tag_input
         ,tag_name = _this.val();
       
       if(dom_element.length) return dom_element.swap_tag(tag_name);
-      
-      new_el = node.dom_element(_.create_element(tag_name));
-      
-      node.parent_node().dom_element().append(new_el);
+      node.create_dom_element(tag_name);
     })
   .autocompleteArray(_.elements, {
       autoFill: true
@@ -4921,14 +4938,31 @@ _.id_input
   .keybind('.', edit_classes)
   .keybind('shift+tab', edit_tag_name)
   .keybind('tab', edit_classes)
-  .keybind('space', edit_classes);
+  .keybind('space', edit_classes)
+  .blur(function() {
+      var _this = _(this)
+        ,val = _this.val()
+        ,el = _this.parent_node().dom_element();
+      
+      if(val.length) el.attr('id', val);
+      else el.removeAttr('id');          
+    });
 
 _.class_input
   .keyup_size_to_fit()
   .keybind('tab', next_class)
   .keybind('.', new_class)
   .keybind('space', new_class)
-  .keybind('shift+tab', previous_class);
+  .keybind('shift+tab', previous_class)
+  .blur(function() {
+      var _this = _(this)
+        ,val
+        ,el = _this.parent_node().dom_element();
+        val = _this.parent_node().class_string();
+      
+      if(val !== " ") el.attr('class', val);
+      else el.removeAttr('class');
+    });
 
 _.attr_input
   .keybind('=', edit_value)
@@ -4947,6 +4981,8 @@ iframe
     var contents = iframe.contents()
       ,body = contents.find('body');
     
+    tree.dom_element(body);
+    
     body.to_tree_nodes(tree.clear());
     
     contents.find('head').append(_.canvas_stylesheet);
@@ -4962,6 +4998,7 @@ iframe
   .attr('src', window.location.href + "?");
   
   tree
+  /*
     .dragstart(function(e) {
       var el = jQuery(e.target)
       if(!el.is('.drag')) return false;
@@ -4980,6 +5017,7 @@ iframe
     .dragend(function(e) {
       _(e.dragProxy).removeClass(drag_class)
     })
+    */
     .mouseover(function(e) {
       var node = _(e.target);
       if(!node.is('.tree_node')) node = node.parent_node();
@@ -4992,6 +5030,9 @@ iframe
     .click(function(e) {
       var el = _(e.target)
         ,node = el.parent_node();
+      
+      if(el.is('input')) return;
+      
       // Destroying the inputs not desired.
       node.blur_all();
       if(el.is('.destroy')) {

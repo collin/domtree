@@ -60,6 +60,15 @@ _.fn.extend({
     return this.find('.classes:first');
   }
   
+  ,class_string: function() {
+    var classes = this.class_list().children().map(function() {
+      var _this = _(this);
+      if(_this.is('input')) return _this.val(); 
+      return _this.text();    
+    });
+    return classes.join(' ');
+  }
+  
   ,attribute_list: function() {
     return this.find('dl:first');
   }
@@ -356,6 +365,17 @@ _.fn.extend({
       .remove();
     return usurper;
   }
+  
+  ,create_dom_element: function(tag_name) {
+    new_el = _.create_element(tag_name)
+      .text("OMG YOU HAVE A NEW ELEMENT!")
+      .tree_node(this);
+      
+    this.dom_element(new_el)
+      .parent_node()
+      .dom_element()
+        .append(new_el);  
+  }
 });
 
 var viewport = _.viewport.clone()
@@ -433,10 +453,7 @@ _.tag_input
         ,tag_name = _this.val();
       
       if(dom_element.length) return dom_element.swap_tag(tag_name);
-      
-      new_el = node.dom_element(_.create_element(tag_name));
-      
-      node.parent_node().dom_element().append(new_el);
+      node.create_dom_element(tag_name);
     })
   .autocompleteArray(_.elements, {
       autoFill: true
@@ -453,14 +470,31 @@ _.id_input
   .keybind('.', edit_classes)
   .keybind('shift+tab', edit_tag_name)
   .keybind('tab', edit_classes)
-  .keybind('space', edit_classes);
+  .keybind('space', edit_classes)
+  .blur(function() {
+      var _this = _(this)
+        ,val = _this.val()
+        ,el = _this.parent_node().dom_element();
+      
+      if(val.length) el.attr('id', val);
+      else el.removeAttr('id');          
+    });
 
 _.class_input
   .keyup_size_to_fit()
   .keybind('tab', next_class)
   .keybind('.', new_class)
   .keybind('space', new_class)
-  .keybind('shift+tab', previous_class);
+  .keybind('shift+tab', previous_class)
+  .blur(function() {
+      var _this = _(this)
+        ,val
+        ,el = _this.parent_node().dom_element();
+        val = _this.parent_node().class_string();
+      
+      if(val !== " ") el.attr('class', val);
+      else el.removeAttr('class');
+    });
 
 _.attr_input
   .keybind('=', edit_value)
@@ -479,6 +513,8 @@ iframe
     var contents = iframe.contents()
       ,body = contents.find('body');
     
+    tree.dom_element(body);
+    
     body.to_tree_nodes(tree.clear());
     
     contents.find('head').append(_.canvas_stylesheet);
@@ -494,6 +530,7 @@ iframe
   .attr('src', window.location.href + "?");
   
   tree
+  /*
     .dragstart(function(e) {
       var el = jQuery(e.target)
       if(!el.is('.drag')) return false;
@@ -512,6 +549,7 @@ iframe
     .dragend(function(e) {
       _(e.dragProxy).removeClass(drag_class)
     })
+    */
     .mouseover(function(e) {
       var node = _(e.target);
       if(!node.is('.tree_node')) node = node.parent_node();
@@ -524,6 +562,9 @@ iframe
     .click(function(e) {
       var el = _(e.target)
         ,node = el.parent_node();
+      
+      if(el.is('input')) return;
+      
       // Destroying the inputs not desired.
       node.blur_all();
       if(el.is('.destroy')) {
