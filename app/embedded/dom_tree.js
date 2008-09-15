@@ -548,19 +548,17 @@ iframe
     body[0].addEventListener("DOMNodeRemoved", function(e) {
       _(e.target).tree_node().remove();
     }, true);
-/*    
+    
     body[0].addEventListener("DOMNodeAdded", function(e) {
-      console.log(e)
+      console.log('DOMNodeAdded',e)/*
       _this = _(e.target);
-      _this.to_tree_node(_this.parent().tree_node());
+      _this.to_tree_node(_this.parent().tree_node());*/
     }, true);
-*/    
+    
     body[0].addEventListener("DOMCharacterDataModified", function(e) {
       var el = _(e.target.parentNode)
         ,tree_node = el.tree_node();
-      
       if(!(tree_node.length) || !(tree_node.parent().length)) {
-        console.log("THE FUNK", el.parent().tree_node().child_list()[0])
         el.to_tree_node(el.parent().tree_node().child_list());
       }
       if(el.blank()) el.tree_node().remove();
