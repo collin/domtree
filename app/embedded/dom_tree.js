@@ -177,6 +177,10 @@ _.fn.extend({
     });
   }
 
+  ,blank: function() {
+    return this.html().match(/^\s*$/);
+  }
+
 /*
   label: the jqueried label
   input: the jqueried input elment
@@ -388,8 +392,6 @@ var viewport = _.viewport.clone()
 _('head').append(_.dom_tree_stylesheet);
 _('body').clear().append(viewport);
 
-iframe.designMode();
-
 function clear_all_inspections() {
   iframe.contents().find('body').remove_class_on_all_children_and_self(inspection_class);
   viewport.remove_class_on_all_children_and_self(inspection_class);
@@ -536,6 +538,18 @@ iframe
   .load(function() {
     var contents = iframe.contents()
       ,body = contents.find('body');
+    
+    iframe.designMode();
+    
+    body[0].addEventListener("DOMNodeRemoved", function(e) {
+      _(e.target).tree_node().remove();
+    }, true);
+    
+    body[0].addEventListener("DOMCharacterDataModified", function(e) {
+      var el = _(e.target.parentNode)
+      
+      if(el.blank()) el.tree_node().remove();
+    }, true);
     
     tree.dom_element(body);
     
