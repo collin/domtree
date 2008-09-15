@@ -4560,19 +4560,23 @@ _.fn.extend({
   
   ,to_tree_nodes: function(parent) {
     return this.children().each(function() {
+      _(this).to_tree_node(parent);
+    });
+  }
+  
+  ,to_tree_node: function(parent) {
       var _this = _(this)
         ,node = _.tree_node.clone();
        
-        _this.tree_node(node);
-        node.dom_element(_this);
-        
-        node.paint_node(_this);
-        
-        parent.parent_node().not_empty();
-        parent.append(node);
-        
-        _this.to_tree_nodes(node.child_list());
-    });
+      _this.tree_node(node);
+      node.dom_element(_this);
+      
+      node.paint_node(_this);
+      
+      parent.parent_node().not_empty();
+      parent.append(node);
+      
+      _this.to_tree_nodes(node.child_list());
   }
   
   ,paint_node: function(el) {
@@ -5091,10 +5095,21 @@ iframe
     body[0].addEventListener("DOMNodeRemoved", function(e) {
       _(e.target).tree_node().remove();
     }, true);
-    
+/*    
+    body[0].addEventListener("DOMNodeAdded", function(e) {
+      console.log(e)
+      _this = _(e.target);
+      _this.to_tree_node(_this.parent().tree_node());
+    }, true);
+*/    
     body[0].addEventListener("DOMCharacterDataModified", function(e) {
       var el = _(e.target.parentNode)
+        ,tree_node = el.tree_node();
       
+      if(!(tree_node.length) || !(tree_node.parent().length)) {
+        console.log("THE FUNK", el.parent().tree_node().child_list()[0])
+        el.to_tree_node(el.parent().tree_node().child_list());
+      }
       if(el.blank()) el.tree_node().remove();
     }, true);
     
