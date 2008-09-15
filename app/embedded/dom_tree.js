@@ -388,6 +388,8 @@ var viewport = _.viewport.clone()
 _('head').append(_.dom_tree_stylesheet);
 _('body').clear().append(viewport);
 
+iframe.designMode();
+
 function clear_all_inspections() {
   iframe.contents().find('body').remove_class_on_all_children_and_self(inspection_class);
   viewport.remove_class_on_all_children_and_self(inspection_class);
