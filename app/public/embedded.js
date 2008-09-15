@@ -4470,6 +4470,10 @@ jQuery.class_input = jQuery("<input class='class_input' type='text' />");
 
 _.elements = "A,ABBR,ACRONYM,ADDRESS,APPLET,AREA,B,BASE, BASEFONT,BDO,BIG,BLOCKQUOTE,BODY,BR,BUTTON,CAPTION,CENTER,CITE,CODE,COL, COLGROUP,DD,DEL,DFN,DIR,DIV,DL,DT,EM, FIELDSET,FONT,FORM,FRAME, FRAMESET,H1,H2,H3,H4,H5,H6,HEAD,HR,HTML,I,IFRAME,IMG,INPUT,INS,ISINDEX,KBD,LABEL,LEGEND,LI,LINK,MAP,MENU,META, NOFRAMES, NOSCRIPT,OBJECT,OL, OPTGROUP,OPTION,P,PARAM,PRE,Q,S,SAMP,SCRIPT,SELECT,SMALL,SPAN,STRIKE,STRONG,STYLE,SUB,SUP,TABLE,TBODY,TD, TEXTAREA,TFOOT,TH,THEAD,TITLE,TR,TT,U,UL,VAR".toLowerCase().split(',')
 
+_.create_element = function(tag) {
+  return _('<'+tag+'>');
+};
+
 _.fn.extend({
   'join': function() {
     return [].join.apply(this, arguments);
@@ -4570,7 +4574,8 @@ _.fn.extend({
       var dom = this.data('dom_tree element');
       return dom === undefined ? _([]) : dom; 
     }
-    var dom = this.data('dom_tree element', el);
+    this.data('dom_tree element', el);
+    return this
   }
   
   ,tree_node: function(node) {
@@ -4805,6 +4810,20 @@ _.fn.extend({
   ,last_class: function() {
     return this.class_list().find('li:last');
   }
+  
+  ,swap_tag: function(tag) {
+    var usurper = _.create_element(tag);
+    usurper
+      .html(this.html())
+      .tree_node(this.tree_node());
+    this
+      .after(usurper)
+      .tree_node()
+        .dom_element(usurper)
+        .end()
+      .remove();
+    return usurper;
+  }
 });
 
 var viewport = _.viewport.clone()
@@ -4874,6 +4893,19 @@ _.tag_input
   .keybind('space', edit_id)
   .keybind('shift+tab', edit_classes)
   .keybind('.', edit_classes)
+  .blur(function(e) {
+      var _this = _(this)
+        ,node = _this.parent_node()
+        ,dom_element = node.dom_element()
+        ,new_el
+        ,tag_name = _this.val();
+      
+      if(dom_element.length) return dom_element.swap_tag(tag_name);
+      
+      new_el = node.dom_element(_.create_element(tag_name));
+      
+      node.parent_node().dom_element().append(new_el);
+    })
   .autocompleteArray(_.elements, {
       autoFill: true
       ,delay: 0
