@@ -16,7 +16,8 @@ namespace :git do
   task :submodule do
     system "git submodule init"
     system "git submodule update"
-    system "git submodule init vendor/sinatra/vendor/rack"
-    system "git submodule update vendor/sinatra/vendor/rack"
+    Dir.chdir Pathname.new(__FILE__).dirname + 'vendor' + 'sinatra'
+    system "git submodule init"
+    system "git submodule update"
   end
 end
