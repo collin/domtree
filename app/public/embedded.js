@@ -4163,6 +4163,9 @@ _.fn.extend({
             .html(input.val())
             .if_empty(opts.if_empty);
         }
+        else {
+          label.html(input.val());
+        }
       });
     
     setTimeout(function(){input.focus();}, 1);
@@ -4350,7 +4353,6 @@ _.tag_input
   .keybind('shift+tab', edit_classes)
   .keybind('.', edit_classes);
 
-  
 _.id_input
   .keyup_size_to_fit()
   .keybind('.', edit_classes)
