@@ -399,10 +399,19 @@ _.fn.extend({
     return this;
   }
   
-  ,create_node: function() {          
+  ,create_node_after: function() {
+    // some times we get the root, not a node
+    return this.create_node(this.is('ol') ? 'prepend' : 'after');
+  }
+  
+  ,create_node_inside: function() {
+    return this.child_list().create_node('append');
+  }
+  
+  ,create_node: function(method) {          
     var node = _.tree_node.clone().edit_tag_name();
     node.id_label().hide_if_empty();
-    this.append(node);
+    return this[method](node);
   }
 });
 
@@ -479,9 +488,10 @@ _.tag_input
         ,dom_element = node.dom_element()
         ,new_el
         ,tag_name = _this.val();
+      // blur handlers get out of order
       
-      if(dom_element.length) return dom_element.swap_tag(tag_name);
-      node.create_dom_element(tag_name);
+        if(dom_element.length) return dom_element.swap_tag(tag_name);
+        node.create_dom_element(tag_name);
     })
   .autocompleteArray(_.elements, {
       autoFill: true
@@ -670,10 +680,10 @@ iframe
           this.focus();
         })
       .keybind('enter', function(e) {
-          tree.active_node().parent_node().child_list().create_node();
+          tree.active_node().create_node_after();
         })
       .keybind('shift+enter', function() {
-          tree.active_node().child_list().create_node(); 
-        });
+          tree.active_node().create_node_inside();
+        })
       
 })(jQuery)
