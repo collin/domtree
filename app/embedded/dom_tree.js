@@ -182,7 +182,7 @@ _.fn.extend({
   }
 
   ,blank: function() {
-    return this.html().match(/^\s*$/);
+    return this.text().match(/^\s*$/);
   }
 
 /*
