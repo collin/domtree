@@ -103,11 +103,14 @@ _.fn.extend({
   }
   
   ,child_list: function() {
+    if(this.is('ol')) return this;
     return this.find('ol:first');
   }
   
   ,parent_node: function() {
-    return this.parents('.tree_node:first');
+    var node = this.parents('.tree_node:first');
+    if(node.length) return node;
+    return this.filter('.tree_node');
   }
   
   ,not_empty: function() {
@@ -384,6 +387,23 @@ _.fn.extend({
       .dom_element()
         .append(new_el);  
   }
+  
+  ,active_node: function() {
+    var input = this.find('input:first');
+    if(input.length) return input.parent_node();
+    return this.filter('.tree_node');  
+  }
+  
+  ,log: function() {
+    console.log(this[0]);
+    return this;
+  }
+  
+  ,create_node: function() {          
+    var node = _.tree_node.clone().edit_tag_name();
+    node.id_label().hide_if_empty();
+    this.append(node);
+  }
 });
 
 var viewport = _.viewport.clone()
@@ -645,12 +665,15 @@ iframe
     })
     
     _(window)
-      .click(function() {this.focus();})
+      .click(function() {
+          tree.blur_all(); 
+          this.focus();
+        })
       .keybind('enter', function(e) {
-        tree.blur_all();
-        var node = _.tree_node.clone().edit_tag_name();
-        node.id_label().hide_if_empty();
-        tree.append(node);
-      });
+          tree.active_node().parent_node().child_list().create_node();
+        })
+      .keybind('shift+enter', function() {
+          tree.active_node().child_list().create_node(); 
+        });
       
 })(jQuery)
