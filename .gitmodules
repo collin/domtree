@@ -4,3 +4,6 @@
 [submodule "vendor/keybinder"]
 	path = vendor/keybinder
 	url = git://github.com/collin/keybinder.git
+[submodule "vendor/jquery_border_layout"]
+	path = vendor/jquery_border_layout
+	url = git://github.com/collin/jquery_border_layout.git
