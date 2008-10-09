@@ -2,16 +2,10 @@
 
 _.elements = "A,ABBR,ACRONYM,ADDRESS,APPLET,AREA,B,BASE, BASEFONT,BDO,BIG,BLOCKQUOTE,BODY,BR,BUTTON,CAPTION,CENTER,CITE,CODE,COL, COLGROUP,DD,DEL,DFN,DIR,DIV,DL,DT,EM, FIELDSET,FONT,FORM,FRAME, FRAMESET,H1,H2,H3,H4,H5,H6,HEAD,HR,HTML,I,IFRAME,IMG,INPUT,INS,ISINDEX,KBD,LABEL,LEGEND,LI,LINK,MAP,MENU,META, NOFRAMES, NOSCRIPT,OBJECT,OL, OPTGROUP,OPTION,P,PARAM,PRE,Q,S,SAMP,SCRIPT,SELECT,SMALL,SPAN,STRIKE,STRONG,STYLE,SUB,SUP,TABLE,TBODY,TD, TEXTAREA,TFOOT,TH,THEAD,TITLE,TR,TT,U,UL,VAR".toLowerCase().split(',')
 
-_.create_element = function(tag) {
-  return _('<'+tag+'>');
-};
 
-_.fn.extend({
-  'join': function() {
-    return [].join.apply(this, arguments);
-  }
-  
-  ,to_tree_nodes: function(parent) {
+
+_.fn.extend({  
+  to_tree_nodes: function(parent) {
     return this.children().each(function() {
       _(this).to_tree_node(parent);
     });
@@ -48,18 +42,6 @@ _.fn.extend({
     return this.find('.id:first')
   }
   
-  ,hide_if_empty: function() {
-    return this.if_empty(function(){this.hide();});
-  }
-  
-  ,id: function() {
-    return this.attr('id');
-  }
-  
-  ,tag_name: function() {
-    return this.attr('tagName').toLowerCase();
-  }
-  
   ,class_list: function() {
     return this.find('.classes:first');
   }
@@ -75,12 +57,6 @@ _.fn.extend({
   
   ,attribute_list: function() {
     return this.find('dl:first');
-  }
-  
-  ,classes: function() {
-    var classes = this.attr('class');
-    if(classes == '') return [];
-    return classes.split(/ /);  
   }
   
   ,classes_to_dom: function() {
@@ -102,21 +78,6 @@ _.fn.extend({
     return dom[0] === document ? null : dom; 
   }
   
-  ,child_list: function() {
-    if(this.is('ol')) return this;
-    return this.find('ol:first');
-  }
-  
-  ,parent_node: function() {
-    var node = this.parents('.tree_node:first');
-    if(node.length) return node;
-    return this.filter('.tree_node');
-  }
-  
-  ,not_empty: function() {
-    return this.removeClass('empty');
-  }
-  
   ,dom_element: function(el) {
     if(!el) {
       var dom = this.data('dom_tree element');
@@ -132,60 +93,6 @@ _.fn.extend({
       return tree_node === undefined ? _([]) : tree_node; 
     }
     return this.data('dom_tree node', node);
-  }
-  
-  ,clear: function() {
-    return this.html('');
-  }
-  
-  ,remove_class_on_all_children_and_self: function(cls) {
-    this.find('.'+cls).removeClass(cls);
-    this.removeClass(cls);
-    return this;
-  }
-  
-  ,toggle_button: function() {
-    return this.find('.toggle:first');
-  }
-  
-  ,collapse_children: function(slide) {
-    if(slide)
-      this.child_list().slideUp();
-    else
-      this.child_list().hide();
-    this.toggle_button().addClass('closed');
-    return this;
-  }
-  
-  ,expand_children: function(slide) {
-    if(slide)
-      this.child_list().slideDown();
-    else
-      this.child_list().show();
-    this.toggle_button().removeClass('closed');
-    return this;
-  }
-  
-  ,dragstart: function(fn) {
-    return this.bind('dragstart', fn);
-  }
-  
-  ,dragend: function(fn) {
-    return this.bind('dragend', fn);
-  }
-  
-  ,size_to_fit: function() {
-    return this.attr('size', this.val().length || 1);
-  }
-  
-  ,keyup_size_to_fit: function() {
-    return this.keyup(function(e) {
-      _(this).size_to_fit();
-    });
-  }
-
-  ,blank: function() {
-    return this.text().match(/^\s*$/);
   }
 
 /*
@@ -280,7 +187,6 @@ _.fn.extend({
   ,edit_classes: function() {
     var first_class = this.class_list().find('li:first');
     if(first_class.length) return this.edit_class(first_class);
-    
     return this.new_class();    
   }
   
@@ -345,20 +251,6 @@ _.fn.extend({
     });
   }
   
-  ,remove_if_empty: function() {
-    return this.if_empty(function() {this.remove();});
-  }
-  
-  ,if_empty: function(fn) {
-    if(this.html() === "") fn.call(this);
-    return this;
-  }
-  
-  ,blur_all: function() {
-    this.find('input').blur();
-    return this;
-  }
-  
   ,last_class: function() {
     return this.class_list().find('li:last');
   }
@@ -392,11 +284,6 @@ _.fn.extend({
     var input = this.find('input:first');
     if(input.length) return input.parent_node();
     return this.filter('.tree_node');  
-  }
-  
-  ,log: function() {
-    console.log(this[0]);
-    return this;
   }
   
   ,create_node_after: function() {
@@ -684,6 +571,6 @@ iframe
         })
       .keybind('shift+enter', function() {
           tree.active_node().create_node_inside();
-        })
+        });
       
 })(jQuery)

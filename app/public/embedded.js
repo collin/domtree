@@ -4523,15 +4523,203 @@ jQuery.fn.execCommand = function(cmd, param) {
 	return this;
 }
 
+
+;(jQuery(function() {
+  jQuery("head").append("<style>html, body {  width: 100%;  height: 100%;  margin: 0;  padding: 0; }.border-layout {  overflow: hidden; }  .border-layout .north, .border-layout .south, .border-layout .east, .border-layout .west, .border-layout .center {    position: absolute; }  .border-layout .north, .border-layout .south {    width: 100%; }  .border-layout .east, .border-layout .west, .border-layout .center {    height: 100%; }  .border-layout .splitter {    background-color: red;    position: absolute; }.north .splitter, .south .splitter {  width: 100%;  height: 10px;  cursor: ns-resize; }.east .splitter, .west .splitter {  height: 100%;  width: 10px;  cursor: ew-resize; }.splitter.proxy {  position: absolute;  background-color: black;  opacity: 0.5;  z-index: 1; }  .splitter.proxy.ns {    height: 10px;    width: 100%; }  .splitter.proxy.ew {    height: 100%;    width: 10px; }</style>");
+}));    
+
+
+;(function(_) {
+
+BorderLayout = {
+  init: function() {
+    _.extend(this, this.Selectors);
+    _.extend(this.Split, this.Selectors);
+    return this
+      .handlesResize()
+      .Split
+        .init();
+  }
+  ,handlesResize: function() {
+    var that = this;
+    _(window).resize(function() { that.doLayouts(); });
+    setTimeout(function(){that.doLayouts();}, 0)
+    return this.doLayouts();
+  }
+  ,doLayouts: function(context) {
+    var that = this;
+    _(this.selector, context).each(function(i, el) { that.doLayout(el); });
+    return this;
+  }
+  ,doLayout: function(el) {
+    return this
+      .layoutHorizontal(el)
+      .layoutVertical(el);
+  }
+  ,layoutHorizontal: function(el) {
+    this.center(el).css('width', this.container(el).width() - this.sidesWidth(el));
+    this.center(el).css('left', this.centerOffsetLeft(el));
+    this.east(el).css('left', this.eastOffsetLeft(el));
+    this.split(this.east(el)).css('right', this.east(el).width());
+    this.split(this.west(el)).css('left', this.west(el).width());
+    return this;
+  }
+  ,layoutVertical: function(el) {
+    this.center(el).css('height', this.innerHeight(el));
+    this.west(el).css('height', this.innerHeight(el));
+    this.east(el).css('height', this.innerHeight(el));
+    this.center(el).css('top', this.innerOffsetTop(el));
+    this.west(el).css('top', this.innerOffsetTop(el));
+    this.east(el).css('top', this.innerOffsetTop(el));
+    this.south(el).css('top', this.southOffsetTop(el));
+    this.split(this.north(el)).css('top', this.north(el).height());
+    this.split(this.south(el)).css('bottom', this.south(el).height());
+    return this;
+  }
+  ,southOffsetTop: function(el) {
+    return this.northAndCenterHeight(el) + this.splitHeight(el);
+  }
+  ,westOffsetLeft: function(el) {
+    return this.container(el).offset().left;
+  }
+  ,centerOffsetLeft: function(el) {
+    return this.west(el).width() + this.split(this.west(el)).width();
+  }
+  ,eastOffsetLeft: function(el) {
+    return this.centerOffsetLeft(el) + this.center(el).width() + this.split(this.east(el)).width();
+  }
+  ,innerOffsetTop: function(el) {
+    return this.north(el).height() + this.split(this.north(el)).height();
+  }
+  ,innerHeight: function(el) {
+    return this.container(el).height() - this.layersHeight(el)
+  }
+  ,northAndCenterHeight: function(el) {
+    return this.north(el).height() + this.center(el).height();
+  }
+  ,sidesWidth: function(el) {
+    return this.east(el).width() + this.west(el).width() + this.splitWidth(el); 
+  }
+  ,layersHeight: function(el) {
+    return this.north(el).height() + this.south(el).height() + this.splitHeight(el); 
+  }
+  ,splitHeight: function(el) {
+    return this.split(this.north(el)).height() + this.split(this.south(el)).height();
+  }
+  ,splitWidth: function(el) {
+    return this.split(this.west(el)).width() + this.split(this.east(el)).width();
+  }
+};
+
+BorderLayout.Split = {
+  init: function() {
+    this.createsHandles();
+  }
+  ,createsHandles: function() {
+    this.allSplit().append(this.markup);
+    var that = this;
+    _('.north > .splitter, .south > .splitter').mousedown(function(splitter) {
+      splitter.preventDefault();
+      _(document.body).prepend('<div class="splitter proxy ns"></div>').css('cursor', 'ns-resize');
+      var dragHandler = function(e) {
+        _('.splitter.proxy.ns').css('top', e.pageY - (_('.splitter.proxy.ns').height() / 2));
+      },
+
+      region = _(this).parent();
+      var releaseHandler = function(e) {
+        _(document.body)
+          .unbind('mousemove')
+          .unbind('mouseup')
+          .css('cursor', 'default');
+        var height;
+        _('.splitter.proxy.ns').remove();
+        if(region.is('.north')) {
+          height = region.height() + (e.pageY - (region.height() + region.offset().top));
+        }
+        else if(region.is('.south')) {
+          height = region.height() + (region.offset().top - e.pageY);
+        }
+        region.css('height', height);
+        _(window).resize();
+      };
+      _(document.body).bind('mouseup', releaseHandler);
+      _(document.body).bind('mousemove', dragHandler);
+    });
+
+    _('.east > .splitter, .west > .splitter').mousedown(function(splitter) {
+      splitter.preventDefault();
+      _(document.body).prepend('<div class="splitter proxy ew"></div>').css('cursor', 'ew-resize');
+      var dragHandler = function(e) {
+        _('.splitter.proxy.ew').css('left', e.pageX - (_('.splitter.proxy.ew').width() / 2));
+      },
+	region = _(this).parent();
+      var releaseHandler = function(e) {
+        _(document.body)
+          .unbind('mousemove')
+          .unbind('mouseup')
+          .css('cursor', 'default');
+          
+        var width;
+        _('.splitter.proxy.ew').remove();
+        if(region.is('.west')) {
+          width = region.width() + (e.pageX - (region.width() + region.offset().left));
+        }
+        else if(region.is('.east')) {
+          width = region.width() + (region.offset().left - e.pageX);
+        }
+        region.css('width', width);
+        _(window).resize();
+      };
+      _(document.body).bind('mouseup', releaseHandler);
+      _(document.body).bind('mousemove', dragHandler);
+    });
+  }
+  ,markup: '<div class="splitter"></div>'
+}
+
+BorderLayout.Selectors = {
+  selector: '.border-layout'
+  ,container: function(el) {
+    return _(el);
+  }
+  ,center: function(el) {
+    return _(el).children('.center');
+  }
+  ,east: function(el) {
+    return _(el).children('.east');
+  }
+  ,west: function(el) {
+    return _(el).children('.west');
+  }
+  ,north: function(el) {
+    return _(el).children('.north');
+  }
+  ,south: function(el) {
+    return _(el).children('.south');
+  }
+  ,split: function(el) {
+    return _(el).children('.splitter');
+  }
+  ,allSplit: function() {
+    return _('.split');
+  }
+};
+
+_(function() {
+  BorderLayout.init();
+});
+})(jQuery);
+
+
 jQuery.jstree_stylesheet = jQuery("<style>    .rtl * {  	direction:rtl;  }  .rtl ul {  	margin:0 5px 0 0;  }  .rtl li {  	padding:0 15px 0 0;  }  .rtl li.last {  	background:url(\"images/lastli_rtl.gif\") right top no-repeat;  }  .rtl li.open {  	background:url(\"images/fminus_rtl.gif\") right 6px no-repeat;  }  .rtl li.closed {  	background:url(\"images/fplus_rtl.gif\") right 4px no-repeat;  }  .rtl li a,  .rtl li span {  	float:right;  	padding:1px 23px 1px 4px !important;  	background-position:right 1px;   	margin-right:1px;  }  .rtl li a:hover {  	background-color: #e7f4f9;  	border:1px solid #d8f0fa;  	padding:0px 23px 0px 3px !important;  	background-position:right 0px;   	margin-right:0px;  }  .rtl li a.clicked,  .rtl li a.clicked:hover,  .rtl li span.clicked {  	background-color: #beebff;  	border:1px solid #99defd;  	padding:0px 23px 0px 3px !important;  	background-position:right 0px;   	margin-right:0px;  }  .rtl li span.clicked {  	padding:0px 21px 0px 3px !important;  }  .rtl ul ul {  	background:url(\"images/dot.gif\") right 1px repeat-y;  }  .rtl li {  	background:url(\"images/li.gif\") right center no-repeat;  }  .rtl #dragged li.open {  	background-position: right 5px;  }</style>");
 
 jQuery.viewporb = jQuery("<div id='viewport'></div>");
 
-jQuery.viewport = jQuery("<div id='viewport'>  <div id='tree_wrap'>    <!-- %input#query{:type=>'text'} -->    <ol class='tree_node' id='tree'></ol>  </div>  <iframe></iframe></div>");
+jQuery.viewport = jQuery("<div class='border-layout' id='viewport'>  <div class='west split' id='tree_wrap'>    <!-- %input#query{:type=>'text'} -->    <ol class='tree_node' id='tree'></ol>  </div>  <iframe class='center'></iframe></div>");
 
-jQuery.dom_tree_stylesheet = jQuery("<style>  input::-moz-selection {    background: #FF3C00 !important;    color: #FFF !important; }    body {    overflow: hidden;    font-size: 100%; }    body.dragging {      cursor: move !important; }    li.dragging {    position: absolute;    border: 1px outset;    background-color: white !important;    z-index: 10000000000; }  li.inspected> button.toggle {    background-image: url(http://localhost:4567/icons/close.png); }  li.inspected> button.block {    background-color: transparent;    background-image: url(http://localhost:4567/icons/block.png); }  li.inspected> button.destroy {    background-color: transparent;    background-image: url(http://localhost:4567/icons/small_cross.png); }  li.inspected> button.drag {    cursor: move;    background-color: transparent;    background-image: url(http://localhost:4567/icons/drag_handle.gif); }  li button.block, li button.destroy, li button.drag, li button.toggle {    border: none;    display: inline;    position: relative;    top: 4px;    float: left;    width: 12px;    height: 12px;    background: none; }  li button.toggle {    width: 16px;    height: 16px;    top: 2px; }  li button.toggle.closed {    background-image: url(http://localhost:4567/icons/open.png); }  li.empty > button.toggle {    visibility: hidden; }  li button.destroy {    margin-right: 10px;    opacity: .5; }    li button.destroy:hover {      opacity: 1; }  li button.block {    margin-right: 10px; }    li button.block.active {      background-image: url(http://localhost:4567/icons/active_block.png); }    #viewport {    font-size: .7em;    font-family: sans-serif; }    #viewport ol, #viewport ul {      list-style: none; }    #viewport ol {      white-space: nowrap;      background-color: white;      padding: 0; }      #viewport ol .inspected {        background-color: #fcc; }        #viewport ol .inspected .tree_node {          background-color: white; }      #viewport ol li {        display: block;        clear: both;        padding-left: 10px;        margin-left: 0px; }      #viewport ol .element {        display: inline;        position: relative;        line-height: 20px; }        #viewport ol .element:before {          content: \"<\";          margin-right: -.3em; }        #viewport ol .element:after {          content: \">\";          margin-left: -.3em; }        #viewport ol .element label, #viewport ol .element .id {          display: inline; }        #viewport ol .element label {          color: blue; }        #viewport ol .element .id {          color: red;          margin-left: -.3em; }        #viewport ol .element .id:before,       #viewport ol .element .id_input:before {          content: \"#\"; }        #viewport ol .element dl, #viewport ol .element dd, #viewport ol .element dt {          display: inline;          margin: 0;          padding: 0; }          #viewport ol .element dl> li,         #viewport ol .element dd> li,         #viewport ol .element dt> li {            margin: 0;            padding: 0;            display: inline; }        #viewport ol .element dt {          color: blue;          margin-left: .3em; }          #viewport ol .element dt:after {            content: \"=\";            color: black; }        #viewport ol .element dd {          color: red; }        #viewport ol .element dd:before, #viewport ol .element dd:after {          content: '\"';          color: black; }        #viewport ol .element .classes {          display: inline;          padding: 0;          margin: 0; }          #viewport ol .element .classes li {            padding: 0;            margin: 0;            background: transparent;            display: inline;            color: green; }            #viewport ol .element .classes li:first-child {              margin-left: -.3em; }            #viewport ol .element .classes li:before {              content: \".\";              color: black;              font-weight: bold; }    #viewport #tree_wrap {      overflow: auto;      width: 40%;      z-index: 100000000000000;      padding-left: 0px;      height: 100%;      position: absolute;      top: 0px;      left: 0px; }      #viewport #tree_wrap #tree {        margin-top: 0px;        margin-left: 0px; }      #viewport #tree_wrap input {        display: inline;        position: relative;        left: -2px;        background-color: white;        font-size: inherit;        border: 1px outset; }    #viewport iframe {      border: 1px outset;      position: absolute;      left: 40%;      width: 60%;      height: 100%;      top: 0px;      right: 0px; }</style>");
+jQuery.dom_tree_stylesheet = jQuery("<style>  body {    overflow: hidden;    font-size: 100%; }    body.dragging {      cursor: move !important; }    li.dragging {    position: absolute;    border: 1px outset;    background-color: white !important;    z-index: 10000000000; }  li.inspected> button.toggle {    background-image: url(http://localhost:4567/icons/close.png); }  li.inspected> button.block {    background-color: transparent;    background-image: url(http://localhost:4567/icons/block.png); }  li.inspected> button.destroy {    background-color: transparent;    background-image: url(http://localhost:4567/icons/small_cross.png); }  li.inspected> button.drag {    cursor: move;    background-color: transparent;    background-image: url(http://localhost:4567/icons/drag_handle.gif); }  li button.block, li button.destroy, li button.drag, li button.toggle {    border: none;    display: inline;    position: relative;    top: 4px;    float: left;    width: 12px;    height: 12px;    background: none; }  li button.toggle {    width: 16px;    height: 16px;    top: 2px; }  li button.toggle.closed {    background-image: url(http://localhost:4567/icons/open.png); }  li.empty > button.toggle {    visibility: hidden; }  li button.destroy {    margin-right: 10px;    opacity: .5; }    li button.destroy:hover {      opacity: 1; }  li button.block {    margin-right: 10px; }    li button.block.active {      background-image: url(http://localhost:4567/icons/active_block.png); }    #viewport {    font-size: .7em;    font-family: sans-serif; }    #viewport ol, #viewport ul {      list-style: none; }    #viewport ol {      white-space: nowrap;      background-color: white;      padding: 0; }      #viewport ol .inspected {        background-color: #fcc; }        #viewport ol .inspected .tree_node {          background-color: white; }      #viewport ol li {        display: block;        clear: both;        padding-left: 10px;        margin-left: 0px; }      #viewport ol .element {        display: inline;        position: relative;        line-height: 20px; }        #viewport ol .element:before {          content: \"<\";          margin-right: -.3em; }        #viewport ol .element:after {          content: \">\";          margin-left: -.3em; }        #viewport ol .element label, #viewport ol .element .id {          display: inline; }        #viewport ol .element label {          color: blue; }        #viewport ol .element .id {          color: red;          margin-left: -.3em; }        #viewport ol .element .id:before,       #viewport ol .element .id_input:before {          content: \"#\"; }        #viewport ol .element dl, #viewport ol .element dd, #viewport ol .element dt {          display: inline;          margin: 0;          padding: 0; }          #viewport ol .element dl> li,         #viewport ol .element dd> li,         #viewport ol .element dt> li {            margin: 0;            padding: 0;            display: inline; }        #viewport ol .element dt {          color: blue;          margin-left: .3em; }          #viewport ol .element dt:after {            content: \"=\";            color: black; }        #viewport ol .element dd {          color: red; }        #viewport ol .element dd:before, #viewport ol .element dd:after {          content: '\"';          color: black; }        #viewport ol .element .classes {          display: inline;          padding: 0;          margin: 0; }          #viewport ol .element .classes li {            padding: 0;            margin: 0;            background: transparent;            display: inline;            color: green; }            #viewport ol .element .classes li:first-child {              margin-left: -.3em; }            #viewport ol .element .classes li:before {              content: \".\";              color: black;              font-weight: bold; }    #viewport #tree_wrap {      overflow: auto;      width: 40%;      z-index: 100000000000000;      padding-left: 0px;      height: 100%;      position: absolute;      top: 0px;      left: 0px; }      #viewport #tree_wrap #tree {        margin-top: 0px;        margin-left: 0px; }      #viewport #tree_wrap input {        display: inline;        position: relative;        left: -2px;        background-color: white;        font-size: inherit;        border: 1px outset; }    #viewport iframe {      border: 1px outset;      position: absolute;      left: 40%;      width: 60%;      height: 100%;      top: 0px;      right: 0px; }</style>");
 
-jQuery.tree_node = jQuery("<li class='tree_node empty'>  <button class='destroy'></button>  <button class='block'></button>  <!-- %button.drag -->  <button class='toggle'></button>  <div class='element'>    <label></label>    <div class='id'></div>    <ul class='classes'></ul>    <dl></dl>  </div>  <ol></ol></li>");
+jQuery.tree_node = jQuery("<li class='tree_node empty'>  <button class='destroy'></button>  <button class='block'></button>  <button class='drag'></button>  <button class='toggle'></button>  <div class='element'>    <label></label>    <div class='id'></div>    <ul class='classes'></ul>    <dl></dl>  </div>  <ol></ol></li>");
 
 jQuery.canvas_stylesheet = jQuery("<style>  .inspected {    outline: 2px red dashed; }    body.inspected {    outline: none; }    .masked * {    outline: 2px blue dashed;    position: relative;    z-index: 1000; }</style>");
 
@@ -4549,16 +4737,10 @@ jQuery.class_input = jQuery("<input class='class_input' type='text' />");
 
 _.elements = "A,ABBR,ACRONYM,ADDRESS,APPLET,AREA,B,BASE, BASEFONT,BDO,BIG,BLOCKQUOTE,BODY,BR,BUTTON,CAPTION,CENTER,CITE,CODE,COL, COLGROUP,DD,DEL,DFN,DIR,DIV,DL,DT,EM, FIELDSET,FONT,FORM,FRAME, FRAMESET,H1,H2,H3,H4,H5,H6,HEAD,HR,HTML,I,IFRAME,IMG,INPUT,INS,ISINDEX,KBD,LABEL,LEGEND,LI,LINK,MAP,MENU,META, NOFRAMES, NOSCRIPT,OBJECT,OL, OPTGROUP,OPTION,P,PARAM,PRE,Q,S,SAMP,SCRIPT,SELECT,SMALL,SPAN,STRIKE,STRONG,STYLE,SUB,SUP,TABLE,TBODY,TD, TEXTAREA,TFOOT,TH,THEAD,TITLE,TR,TT,U,UL,VAR".toLowerCase().split(',')
 
-_.create_element = function(tag) {
-  return _('<'+tag+'>');
-};
 
-_.fn.extend({
-  'join': function() {
-    return [].join.apply(this, arguments);
-  }
-  
-  ,to_tree_nodes: function(parent) {
+
+_.fn.extend({  
+  to_tree_nodes: function(parent) {
     return this.children().each(function() {
       _(this).to_tree_node(parent);
     });
@@ -4595,18 +4777,6 @@ _.fn.extend({
     return this.find('.id:first')
   }
   
-  ,hide_if_empty: function() {
-    return this.if_empty(function(){this.hide();});
-  }
-  
-  ,id: function() {
-    return this.attr('id');
-  }
-  
-  ,tag_name: function() {
-    return this.attr('tagName').toLowerCase();
-  }
-  
   ,class_list: function() {
     return this.find('.classes:first');
   }
@@ -4622,12 +4792,6 @@ _.fn.extend({
   
   ,attribute_list: function() {
     return this.find('dl:first');
-  }
-  
-  ,classes: function() {
-    var classes = this.attr('class');
-    if(classes == '') return [];
-    return classes.split(/ /);  
   }
   
   ,classes_to_dom: function() {
@@ -4649,21 +4813,6 @@ _.fn.extend({
     return dom[0] === document ? null : dom; 
   }
   
-  ,child_list: function() {
-    if(this.is('ol')) return this;
-    return this.find('ol:first');
-  }
-  
-  ,parent_node: function() {
-    var node = this.parents('.tree_node:first');
-    if(node.length) return node;
-    return this.filter('.tree_node');
-  }
-  
-  ,not_empty: function() {
-    return this.removeClass('empty');
-  }
-  
   ,dom_element: function(el) {
     if(!el) {
       var dom = this.data('dom_tree element');
@@ -4679,60 +4828,6 @@ _.fn.extend({
       return tree_node === undefined ? _([]) : tree_node; 
     }
     return this.data('dom_tree node', node);
-  }
-  
-  ,clear: function() {
-    return this.html('');
-  }
-  
-  ,remove_class_on_all_children_and_self: function(cls) {
-    this.find('.'+cls).removeClass(cls);
-    this.removeClass(cls);
-    return this;
-  }
-  
-  ,toggle_button: function() {
-    return this.find('.toggle:first');
-  }
-  
-  ,collapse_children: function(slide) {
-    if(slide)
-      this.child_list().slideUp();
-    else
-      this.child_list().hide();
-    this.toggle_button().addClass('closed');
-    return this;
-  }
-  
-  ,expand_children: function(slide) {
-    if(slide)
-      this.child_list().slideDown();
-    else
-      this.child_list().show();
-    this.toggle_button().removeClass('closed');
-    return this;
-  }
-  
-  ,dragstart: function(fn) {
-    return this.bind('dragstart', fn);
-  }
-  
-  ,dragend: function(fn) {
-    return this.bind('dragend', fn);
-  }
-  
-  ,size_to_fit: function() {
-    return this.attr('size', this.val().length || 1);
-  }
-  
-  ,keyup_size_to_fit: function() {
-    return this.keyup(function(e) {
-      _(this).size_to_fit();
-    });
-  }
-
-  ,blank: function() {
-    return this.text().match(/^\s*$/);
   }
 
 /*
@@ -4827,7 +4922,6 @@ _.fn.extend({
   ,edit_classes: function() {
     var first_class = this.class_list().find('li:first');
     if(first_class.length) return this.edit_class(first_class);
-    
     return this.new_class();    
   }
   
@@ -4892,20 +4986,6 @@ _.fn.extend({
     });
   }
   
-  ,remove_if_empty: function() {
-    return this.if_empty(function() {this.remove();});
-  }
-  
-  ,if_empty: function(fn) {
-    if(this.html() === "") fn.call(this);
-    return this;
-  }
-  
-  ,blur_all: function() {
-    this.find('input').blur();
-    return this;
-  }
-  
   ,last_class: function() {
     return this.class_list().find('li:last');
   }
@@ -4939,11 +5019,6 @@ _.fn.extend({
     var input = this.find('input:first');
     if(input.length) return input.parent_node();
     return this.filter('.tree_node');  
-  }
-  
-  ,log: function() {
-    console.log(this[0]);
-    return this;
   }
   
   ,create_node_after: function() {
@@ -5231,6 +5306,6 @@ iframe
         })
       .keybind('shift+enter', function() {
           tree.active_node().create_node_inside();
-        })
+        });
       
 })(jQuery)

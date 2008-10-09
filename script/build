@@ -4,6 +4,7 @@ require './lib/dom_tree'
 require 'continuous_builder'
 require 'haml'
 require 'sass'
+require 'sass/plugin'
 #require 'jabs'
 require 'erb'
 
@@ -13,9 +14,14 @@ module DomTree
       :files => DomTree.app/'bookmarklet'/'source.js.erb',
       :update => :build_bookmarklet
 
-    watches :embedded_haml,
-      :files => DomTree.app/'embedded'/'**'/'*.html.haml',
-      :module => Haml   
+    watches :haml,
+      :files => DomTree.app/'**'/'*.html.haml',
+      :module => Haml
+         
+    watches :sass,
+      :files => DomTree.app/'**'/'*.css.sass',
+      :module => Sass,
+      :style => :compressed
 =begin
     watches :embedded_jabs,
       :files => DomTree.app/'embedded'/'**'/'*.js.jabs',
@@ -23,11 +29,13 @@ module DomTree
 =end
     watches :embedded_resources,
       :files => DomTree.app/'embedded'/'**'/'*{.js,.html}',
-      :update => :build_embedded
+      :update => :build_embedded,
+      :wait_for_all_edits => true
 
     watches :vendor_js,
       :files => DomTree.vendor/'**'/'*.js',
-      :update => :build_embedded
+      :update => :build_embedded,
+      :wait_for_all_edits => true
 
     def build_bookmarklet path
       template = ERB.new(path.read)
@@ -47,6 +55,7 @@ module DomTree
       scripts << (vendor/'keybinder'/'jquery.keybinder.js')
       scripts << (vendor/'autocomplete'/'jquery.autocomplete.js')
       scripts << (vendor/'designmode'/'jquery.designmode.js')
+      scripts << (vendor/'jquery_border_layout'/'jquery.border_layout-0.0.0.js')
       
       Pathname.glob(DomTree.app/'embedded'/'**'/'*.html').each do |script|
         flat = script.read
