@@ -1,0 +1,128 @@
+ebody
+  :overflow hidden
+  :font-size 100%
+  &.dragging
+    :cursor move !important
+li
+  &.dragging
+    :position absolute
+    :border 1px outset
+    :background-color white !important
+    :z-index 10000000000
+    
+  &.inspected
+    &> button.toggle
+      :background-image url(#{DomTree.uri_root}/icons/close.png)
+    &> button.block
+      :background
+        :color transparent
+        :image url(#{DomTree.uri_root}/icons/block.png) 
+    &> button.destroy
+      :background
+        :color transparent
+        :image url(#{DomTree.uri_root}/icons/small_cross.png)
+    &> button.drag
+      :cursor move
+      :background
+        :color transparent
+        :image url(#{DomTree.uri_root}/icons/drag_handle.gif)
+  button.block, button.destroy, button.drag, button.toggle
+    :border none
+    :display inline
+    :position relative
+    :top 4px
+    :float left
+    :width 12px
+    :height 12px
+    :background none
+  button.toggle
+    :width 16px
+    :height 16px
+    :top 2px
+  button.toggle.closed
+    :background-image url(#{DomTree.uri_root}/icons/open.png)
+  &.empty > button.toggle
+    :visibility hidden
+    
+  button.destroy
+    :margin-right 10px
+    :opacity .5
+    &:hover
+      :opacity 1
+  button.block
+    :margin-right 10px
+    &.active
+      :background-image url(#{DomTree.uri_root}/icons/active_block.png)
+      
+  ol, ul
+    :list-style none
+  ol
+    :white-space nowrap
+    :background-color white
+    :padding 0
+    li
+      :display block
+      :clear both
+      :padding-left 10px
+      :margin-left 0px
+    .element
+      &:before
+        :content "<"
+        :margin-right -.3em
+      &:after
+        :content ">"
+        :margin-left -.3em
+      label, .id
+        :display inline
+      label
+        :color blue
+      .id
+        :color red
+        :margin-left -.3em
+      .id, .id_input
+        &:before
+          :content "#"
+      dl, dd, dt
+        :display inline
+        :margin 0
+        :padding 0
+        &> li 
+          :margin 0
+          :padding 0
+          :display inline
+      dt
+        :color blue
+        :margin-left .3em
+        &:after
+          :content "="
+          :color black
+      dd
+        :color red
+      dd:before, dd:after
+        :content '"'
+        :color black
+      .classes
+        :display inline
+        :padding 0
+        :margin 0 
+        li
+          :padding 0
+          :margin 0
+          :background transparent
+          :display inline
+          :color green
+          &:first-child
+            :margin-left -.3em
+          &:before
+            :content "."
+            :color black
+            :font-weight bold
+
+    input
+      :display inline
+      :position relative
+      :left -2px
+      :background-color white
+      :font-size inherit
+      :border 1px outset
+
